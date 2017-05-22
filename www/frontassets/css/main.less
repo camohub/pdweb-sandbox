@@ -1,0 +1,62 @@
+@import "../../bower_components/bootstrap/dist/css/bootstrap.min.css";
+@import "../../bower_components/bootstrap/dist/css/bootstrap-theme.min.css";
+@import "colors.less";
+@import "bootstrap_nav.less";
+
+
+
+html, body, h1, h2, h3, h4, div, ul, ol, li, form {
+	padding: 0;
+	margin: 0;
+}
+
+html, body {
+	height: 100%;
+}
+
+body {
+	position: relative;
+	min-height: 100%;
+	font-family: "Helvetica Neue", Arial, sans-serif;
+	font-weight: 400;
+	background-color: @color-1;
+	color: @color-2;
+	font-size: 20px;
+}
+
+#wrapper {
+	position:relative;
+	min-height: 100%;
+	padding-top: 70px;
+	padding-bottom: 70px;  /* XS height of the footer element */
+}
+
+#content {
+	min-height: 450px;
+}
+
+#footer {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	height: 70px;  /* XS height */
+	line-height: 70px;
+	font-size: 14px;
+	text-align: center;
+}
+
+.center {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	width: 100%;
+	height: auto;
+}
+
+@media(min-width: 768px) {
+
+	.xs-pad-top-30 { padding-top: 30px; }
+	.xs-pad-bot-30 { padding-bottom: 30px; }
+}

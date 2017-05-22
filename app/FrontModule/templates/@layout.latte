@@ -1,0 +1,104 @@
+{**
+ * @param string   $basePath web base path
+ * @param array    $flashes  flash messages
+ *}
+<!DOCTYPE html>
+<html>
+<head>
+
+	{default $meta_title = 'PDWeb'}
+	{default $meta_desc = 'Programovanie webových stránok Prievdiza'}
+	{default $meta_keywords = 'Webové stránky, weby, eshopy, Prievidza'}
+	{default $meta_image = "http://pdweb.sk{$basePath}/images/logo.png"}
+
+	<title>{ifset #title}{block title|striptags}{/block}{/ifset}</title>
+
+	<meta charset="utf-8">
+	<meta name="description" content="{$meta_desc}">
+	<meta name="keywords" content="{$meta_desc}">
+	<meta name="viewport" content="width=device-width">
+
+	<meta property="og:url" content="{link //this}" />
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="{$meta_title}" />
+	<meta property="og:description" content="{$meta_desc}" />
+	<meta property="og:image" content="{$meta_image}" />
+
+
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+	<link rel="stylesheet" href="{$basePath}/frontassets/css/main.css">
+	<link rel="icon" type="image/png" href="{$basePath}/favicon-32x32.png" sizes="32x32">
+
+	<title>{ifset $metaTitle}{$metaTitle} | pdweb.sk{else}pdweb.sk{/ifset}</title>
+
+	{block head}{/block}
+</head>
+
+<body>
+
+<nav id="navigation" class="navbar navbar-default">
+	<div class="container-fluid pos-rel">
+		<!-- Brand and toggle get grouped for better mobile display -->
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+
+			<a n:href="Default:default"><img src="{$basePath}/images/logo.png" alt="PDWeb" class="logo"></a>
+		</div>
+
+		<!-- Collect the nav links, forms, and other content for toggling -->
+		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<ul class="nav navbar-nav navbar-right">
+				<li><a href="#about">Home</a></li>
+				<li><a href="#technology">Technológie</a></li>
+				<li><a href="contact">Kontakt</a></li>
+			</ul>
+		</div><!-- /.navbar-collapse -->
+	</div><!-- /.container-fluid -->
+</nav>
+
+<div id="wrapper">
+
+	{snippet flash}
+		<div n:if="count($flashes)" n:inner-foreach="$flashes as $flash" class="flash">
+			<div n:class="alert, alert-dismissible, fade, in, $flash->type == 'error' ? alert-danger : alert-success, $flash->type">
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>{$flash->message}
+			</div>
+		</div>
+	{/snippet}
+
+	<div id="content" class="container-fluid">
+		<div class="row">
+
+			{include content}
+
+		</div>
+	</div>
+
+	<div id="footer" class="container-fluid footer">
+		<div class="row xs-height-100-pc">
+			<div class="col-xs-12 text-center small pad-hor-15">
+				<i class="fa fa-copyright"></i> PDWeb All&nbsp;rights&nbsp;reserved
+			</div>
+		</div>
+	</div>
+
+	{block scripts}
+		<script src="{$basePath}/bower_components/jquery/dist/jquery.min.js"></script>
+		<script src="{$basePath}/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script src="{$basePath}/bower_components/nette.ajax.js/nette.ajax.js"></script>
+		<script src="{$basePath}/bower_components/nette-live-form-validation/live-form-validation.js"></script>
+		{*<script src="https://nette.github.io/resources/js/netteForms.min.js"></script>*}
+		<script src="{$basePath}/frontassets/js/main.js"></script>
+	{/block}
+
+</div>
+
+</body>
+</html>

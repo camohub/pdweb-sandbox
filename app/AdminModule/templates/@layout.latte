@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+	<meta charset="utf-8">
+	<title>Administrácia {$config['websiteName']}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="author" content="Frio.sk">
+
+	<meta name="robots" content="noindex">
+
+	<link href="{$basePath}/adminassets/css/main.css" rel="stylesheet">
+
+	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+	<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+
+<body>
+
+{include '_mainMenu.latte'}
+
+<div class="container-fluid">
+	<div class="row">
+
+		{include '_sideBar.latte'}
+
+		<div class="{ifset $grid}col-md-{$grid}{else}col-md-12{/ifset} {ifset $sideBar}col-sm-offset-2{/ifset}">
+
+		{snippet flash}
+			<div n:if="count($flashes)" n:inner-foreach="$flashes as $flash" class="flash">
+				<div n:class="alert, alert-dismissible, fade, in, $flash->type == 'error' ? alert-danger : alert-success, $flash->type">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>{$flash->message}
+				</div>
+			</div>
+		{/snippet}
+
+		{control breadcrumb}
+
+		{include #content}
+
+		</div>
+	</div>
+</div>
+
+{* Scripts *}
+{include '_scripts.latte'}
+{block scripts}{/block}
+
+</body>
+</html>

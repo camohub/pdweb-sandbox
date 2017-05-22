@@ -1,0 +1,22 @@
+{
+	"name": "pdweb sandbox",
+	"homepage": "https://pdweb.sk",
+	"authors": [
+		"pdweb masters"
+	],
+	"description": "Javascript dependencies for pdweb/sandbox.",
+	"license": "MIT",
+	"ignore": [
+		"**/.*",
+		"node_modules",
+		"bower_components",
+		"test",
+		"tests"
+	],
+	"dependencies": {
+		"jquery": "^2.2.1",
+		"bootstrap": "^3.3.7",
+		"nette.ajax.js": "^2.3.0",
+		"nette-live-form-validation": "^1.8.0"
+	}
+}
