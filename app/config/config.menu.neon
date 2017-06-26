@@ -17,8 +17,29 @@ menu:
 	Admin:
 		controlClass: App\AdminModule\Components\Menu\AdminMenuControl
 		controlInterface: App\AdminModule\Components\Menu\IAdminMenuControlFactory
+		template:
+			menu: %appDir%/AdminModule/components/menu/templates/menu.latte
+			breadcrumb: %appDir%/AdminModule/components/menu/templates/breadcrumb.latte
 
 		items:
-			Technology: :Front:Default:default#technology
-			About: :Front:Default:default#about
-			Contact: :Front:Default:default#contact
+			Config:
+				title: Config
+				target: :Admin:Config:default
+				data: [icon=cog]
+			Config2:
+				title: Config
+				target: :Admin:Config:default
+				data: [icon=cog]
+			Config3:
+				title: Config
+				target: :Admin:Config:default
+				data: [icon=cog]
+				items:
+					Config4:
+						title: Config4
+						target: :Admin:Config:default
+						data: [icon=cog]
+					Config5:
+						title: Config5
+						target: :Admin:Config:default
+						data: [icon=cog]

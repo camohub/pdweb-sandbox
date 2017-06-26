@@ -1,0 +1,34 @@
+<aside class="main-sidebar">
+
+	<!-- sidebar: style can be found in sidebar.less -->
+	<section class="sidebar">
+
+		{if !isset($menuParent)}
+			{if count($menu->getItems()) == 1 && $menu->getItem('__root')}
+				{var $menuParent = $menu->getItem('__root')}
+			{else}
+				{var $menuParent = $menu}
+			{/if}
+		{/if}
+
+		{if !isset($menuSub)}
+			{var $menuSub = FALSE}
+		{/if}
+
+		<ul n:block="menuBranch" n:if="$menuParent->hasVisualItems()" n:class="(!$menuSub) ? sidebar-menu : treeview-menu">
+			{if !$menuSub}
+				<li class="header color-3"><a href="#"><span>MAIN MENU</span></a></li>
+			{/if}
+			{foreach $menuParent->getItems() as $item}
+				{var $withLink = !($item->hasData('nolink') && $item->getData('nolink'))}
+				<li n:if="($item->isVisual() && $item->isAllowed())" n:class="$withLink && $item->isActive() ? active, $item->hasItems() ? treeview">
+					<a href="{if $withLink}{$item->getLink()}{else}#{/if}">{if $item->hasData('icon')}<i class="fa fa-{$item->getData('icon')}"></i> {/if}<span>{$item->getTranslatedTitle()}</span></a>
+					{include menuBranch, menuParent => $item, menuSub => TRUE}
+				</li>
+			{/foreach}
+		</ul>
+
+
+	</section>
+<!-- /.sidebar -->
+</aside>

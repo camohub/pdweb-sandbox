@@ -8,6 +8,8 @@ use Nette;
 use App;
 use Nette\Security\Passwords;
 use App\Model\Repositories\UsersRepository;
+use App\Model\Repositories\UsersAclRolesRepository;
+use Nette\Utils\Random;
 
 
 /**
@@ -20,14 +22,18 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 	/** @var Nette\Database\Context */
 	private $database;
 
-	/** @var Nette\Database\Context */
+	/** @var UsersRepository */
 	private $usersRepository;
 
+	/** @var UsersAclRolesRepository */
+	private $usersAclRolesRepository;
 
-	public function __construct( Nette\Database\Context $database, UsersRepository $uR )
+
+	public function __construct( Nette\Database\Context $database, UsersRepository $uR, UsersAclRolesRepository $uARR )
 	{
 		$this->database = $database;
 		$this->usersRepository = $uR;
+		$this->usersAclRolesRepository = $uARR;
 	}
 
 
@@ -41,39 +47,35 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 	{
 		list( $user_name, $password ) = $credentials;
 
-		$user = $this->userRepository->findOneBy( [ self::COL_NAME => $user_name, self::COL_PASSWORD . ' not' => NULL ] );
+		$user_row = $this->usersRepository->findOneBy( [ UsersRepository::COL_NAME => $user_name, UsersRepository::COL_PASSWORD . ' NOT' => NULL ] );
 
-		if ( ! $user )
+		if ( ! $user_row )
 		{
 			throw new Nette\Security\AuthenticationException( 'The username is incorrect.', self::IDENTITY_NOT_FOUND );
-
 		}
-		elseif ( ! $user->getActive() )
+		elseif ( ! $user_row->active )
 		{
 			throw new App\Exceptions\AccessDeniedException;
-
 		}
-		elseif ( ! Passwords::verify( $password, $user->getPassword() ) )
+		elseif ( ! Passwords::verify( $password, $user_row->password ) )
 		{
 			throw new Nette\Security\AuthenticationException( 'The password is incorrect.', self::INVALID_CREDENTIAL );
-
 		}
-		elseif ( Passwords::needsRehash( $user->getPassword() ) )
+		elseif ( Passwords::needsRehash( $user_row->password ) )
 		{
-			$user->password = Passwords::hash( $password );
-			$this->em->persist( $user );
-			$this->em->flush();
+			$user_row->update( ['password' => Passwords::hash( $password )] );
 		}
 
-		$userArr = $user->getArray();
+		$userArr = $user_row->toArray();
+		unset( $userArr[UsersRepository::COL_PASSWORD] );
 
-		$rolesArr = [ ];
-		foreach ( $user->getRoles() as $role )
+		$rolesArr = array();
+		foreach( $user_row->related('users_acl_roles', 'users_id') as $role )
 		{
-			$rolesArr[] = $role->getName();
+			$rolesArr[] = $role->ref('acl_roles', 'acl_roles_id')->name;
 		}
 
-		return new Nette\Security\Identity( $user->getId(), $rolesArr, $userArr );
+		return new Nette\Security\Identity( $user_row->id, $rolesArr, $userArr );
 	}
 
 
@@ -81,7 +83,7 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 	 * @desc Do not use it for users from social networks. They have its own manager classes.
 	 * @param $params
 	 * @param bool $admin
-	 * @return Entity\User
+	 * @return Nette\Database\IRow
 	 * @throws App\Exceptions\DuplicateEntryException
 	 * @throws \Exception
 	 */
@@ -95,36 +97,48 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 			$params['roles'] = [ 'registered' ];
 		}
 
-		$params['roles'] = $this->em->getRepository( Entity\Role::class )->findBy( [ 'name' => $params['roles'] ] );
+		$params['roles'] = $this->aclRolesRepository->findBy( [ 'name' => $params['roles'] ] );
 
-		$params[self::COL_PASSWORD] = Passwords::hash( $params['password'] );
+		$params[UsersRepository::COL_PASSWORD] = Passwords::hash( $params['password'] );
 		$params['resource'] = 'App';
 
+		// Do not use transacion here. It is used in RegisterPresenter
+		$params['password'] = Passwords::hash($params['password']);
+		$code = Random::generate( 10,'0-9a-zA-Z' );
 		try
 		{
-			$user = new Entity\User( $params ); // or $user->create( $params );
-			$this->em->persist( $user );
-			$this->em->flush();
+			$row = $this->usersRepository->add([
+				UsersRepository::COL_NAME => $params['user_name'],
+				UsersRepository::COL_PASSWORD => $params['password'],
+				UsersRepository::COL_EMAIL => $params['email'],
+				UsersRepository::COL_ACTIVE => 0,
+				UsersRepository::COL_CONFIRMATION_CODE => $code,
+			]);
 		}
-		catch ( Doctrine\DBAL\Exception\UniqueConstraintViolationException $e )
+		catch(\PDOException $e)
 		{
-			// if/elseif returns the name of problematic field and value
-			if ( $this->userRepository->findOneBy( [ 'user_name =' => $params['user_name'] ] ) )
+			// This catch ONLY checks duplicate entry to fields with UNIQUE KEY
+			$info = $e->errorInfo;
+			// mysql==1062  sqlite==19  postgresql==23505
+			if ( $info[0] == 23000 && $info[1] == 1062 )
 			{
-				$code = 1;
-				$msg = 'user_name';
+				// if/elseif returns the name of problematic field and value
+				if( $this->usersRepository->findOneBy( ['user_name = ?', $params['user_name']] ) )
+				{
+					$msg = 'user_name';	$code = 1;
+				}
+				elseif( $this->usersRepository->findOneBy( ['email = ?', $params['email']] ) )
+				{
+					$msg = 'email';	$code = 2;
+				}
+				throw new App\Exceptions\DuplicateEntryException( $msg, $code );
 			}
-			elseif ( $this->userRepository->findOneBy( [ 'email = ' => $params['email'] ] ) )
-			{
-				$code = 2;
-				$msg = 'email';
-			}
-
-			throw new App\Exceptions\DuplicateEntryException( $msg, $code );
-
+			else { throw $e; }
 		}
 
-		return $user;
+		$this->usersAclRolesRepository->add( [UsersAclRolesRepository::COL_USERS_ID => $row->id, UsersAclRolesRepository::COL_ACL_ROLES_ID => 3] );
+
+		return $row;
 
 	}
 }

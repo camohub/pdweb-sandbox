@@ -31,10 +31,14 @@
 		"nette/utils": "^2.4",
 		"latte/latte": "^2.4",
 		"tracy/tracy": "^2.4",
-		"dg/adminer-custom": "^1.6"
+		"dg/adminer-custom": "^1.6",
+		"janmarek/webloader": "@dev",
+		"oyejorge/less.php": "v1.7.0.14",
+		"joseki/webloader-filters": "^1.1",
+		"carrooi/nette-menu": "^1.1",
+		"robmorgan/phinx": "^0.8.0"
 	},
 	"require-dev": {
 		"nette/tester": "^1.6"
-	},
-	"minimum-stability": "stable"
+	}
 }

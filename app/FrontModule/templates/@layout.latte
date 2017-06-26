@@ -7,7 +7,7 @@
 <head>
 
 	{default $meta_title = 'PDWeb'}
-	{default $meta_desc = 'Programovanie webových stránok Prievdiza'}
+	{default $meta_desc = 'Programovanie webových stránok Prievidza'}
 	{default $meta_keywords = 'Webové stránky, weby, eshopy, Prievidza'}
 	{default $meta_image = "http://pdweb.sk{$basePath}/images/logo.png"}
 
@@ -26,8 +26,8 @@
 
 
 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-	<link rel="stylesheet" href="{$basePath}/frontassets/css/main.css">
-	<link rel="icon" type="image/png" href="{$basePath}/favicon-32x32.png" sizes="32x32">
+	{control frontCss}
+	<link rel="icon" type="image/png" href="{$basePath}/favicon.png" sizes="32x32">
 
 	<title>{ifset $metaTitle}{$metaTitle} | pdweb.sk{else}pdweb.sk{/ifset}</title>
 
@@ -52,11 +52,7 @@
 
 		<!-- Collect the nav links, forms, and other content for toggling -->
 		<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-			<ul class="nav navbar-nav navbar-right">
-				<li><a href="#about">Home</a></li>
-				<li><a href="#technology">Technológie</a></li>
-				<li><a href="contact">Kontakt</a></li>
-			</ul>
+			{control frontMenu:top}
 		</div><!-- /.navbar-collapse -->
 	</div><!-- /.container-fluid -->
 </nav>
@@ -95,7 +91,7 @@
 		<script src="{$basePath}/bower_components/nette.ajax.js/nette.ajax.js"></script>
 		<script src="{$basePath}/bower_components/nette-live-form-validation/live-form-validation.js"></script>
 		{*<script src="https://nette.github.io/resources/js/netteForms.min.js"></script>*}
-		<script src="{$basePath}/frontassets/js/main.js"></script>
+		{control frontJs}
 	{/block}
 
 </div>

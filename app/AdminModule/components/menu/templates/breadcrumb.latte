@@ -1,0 +1,21 @@
+<ol class="breadcrumb" n:inner-foreach="$menu->getPath() as $item">
+	{if $iterator->first}
+		<li>
+			<a href="{plink :Admin:Default:default}"><i class="fa fa-home"></i>Home</a>
+		</li>
+	{/if}
+	{if !$iterator->last}
+		{var $withLink = !($item->hasData('nolink') && $item->getData('nolink'))}
+		<li>
+			<a href="{if $withLink}{$item->getLink()}{else}#{/if}">
+				{if $iterator->first && $item->hasData('icon')}<i class="fa fa-{$item->getData('icon')}"></i> {/if}
+				{$item->getTranslatedTitle()}
+			</a>
+		</li>
+	{else}
+		<li class="active">
+			{if $iterator->first && $item->hasData('icon')}<i class="fa fa-{$item->getData('icon')}"></i> {/if}
+			{$item->getTranslatedTitle()}
+		</li>
+	{/if}
+</ol>

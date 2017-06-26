@@ -1,8 +1,6 @@
-@import "../../bower_components/bootstrap/dist/css/bootstrap.min.css";
-@import "../../bower_components/bootstrap/dist/css/bootstrap-theme.min.css";
+@import "../../bower_components/bootstrap/less/bootstrap.less";
 @import "colors.less";
 @import "bootstrap_nav.less";
-
 
 
 html, body, h1, h2, h3, h4, div, ul, ol, li, form {
@@ -17,7 +15,7 @@ html, body {
 body {
 	position: relative;
 	min-height: 100%;
-	font-family: "Helvetica Neue", Arial, sans-serif;
+	font-family: "Helvetica Neue", Arial, Verdana, sans-serif;
 	font-weight: 400;
 	background-color: @color-1;
 	color: @color-2;
@@ -46,6 +44,10 @@ body {
 	text-align: center;
 }
 
+ul, ol, li { list-style-type: none; }
+input:-webkit-autofill { -webkit-box-shadow: 0 0 0 30px white inset; }
+
+
 .center {
 	position: absolute;
 	left: 50%;
@@ -55,8 +57,56 @@ body {
 	height: auto;
 }
 
-@media(min-width: 768px) {
+.flash {
+	position: absolute;
+	top: 150px;
+	left: 2.5%;
+	width: 95%;
 
-	.xs-pad-top-30 { padding-top: 30px; }
-	.xs-pad-bot-30 { padding-bottom: 30px; }
+	@media( min-width: 768px ) {
+		left: 15%;
+		width: 70%;
+	}
 }
+
+
+.xs-mar-ver-15 { margin-top: 15px; margin-bottom: 15px; }
+.xs-mar-ver-30 { margin-top: 30px; margin-bottom: 30px; }
+
+.xs-mar-top-100 { margin-top: 100px; }
+
+.xs-pad-ver-30 { padding-top: 30px; padding-bottom: 30px; }
+.xs-pad-top-30 { padding-top: 30px; }
+.xs-pad-bot-30 { padding-bottom: 30px; }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///// SM WIDTH DEFINITIONS ///////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+@media( min-width: 768px ) {
+
+	.sm-mar-ver-15 { margin-top: 15px; margin-bottom: 15px; }
+	.sm-mar-ver-30 { margin-top: 30px; margin-bottom: 30px; }
+
+	.sm-mar-top-100 { margin-top: 100px; }
+
+	.sm-pad-ver-30 { padding-top: 30px; padding-bottom: 30px; }
+	.sm-pad-top-30 { padding-top: 30px; }
+	.sm-pad-bot-30 { padding-bottom: 30px; }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///// MD WIDTH DEFINITIONS ///////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+@media( min-width: 992px ) {
+
+	.md-mar-ver-15 { margin-top: 15px; margin-bottom: 15px; }
+	.md-mar-ver-30 { margin-top: 30px; margin-bottom: 30px; }
+
+	.md-mar-top-100 { margin-top: 100px; }
+
+	.md-pad-ver-30 { padding-top: 30px; padding-bottom: 30px; }
+	.md-pad-top-30 { padding-top: 30px; }
+	.md-pad-bot-30 { padding-bottom: 30px; }
+}
+
+.color-3 { color: @color-3; }

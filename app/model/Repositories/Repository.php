@@ -23,7 +23,7 @@ abstract class Repository extends Nette\Object
 
 	protected function getTable( $name = NULL )
 	{
-		return $name ? $this->database->table( $name ) : $this->database->table( self::TBL_NAME );
+		return $name ? $this->database->table( $name ) : $this->database->table( static::TBL_NAME );  // self:: does not rewrite const value in child class.
 	}
 
 
@@ -42,6 +42,15 @@ abstract class Repository extends Nette\Object
 	public function findBy( array $by )
 	{
 		return $this->getTable()->where( $by );
+	}
+
+
+	/**
+	 * @return Nette\Database\Table\Selection
+	 */
+	public function findOneBy( array $by )
+	{
+		return $this->getTable()->where( $by )->limit( 1 )->fetch();
 	}
 
 

@@ -17,13 +17,8 @@ class SignPresenter extends BasePresenter
 		// But user is already logged in.
 		if ( $this->user->isLoggedIn() )
 		{
-			$this->redirect( ':Articles:show' );
+			$this->redirect( ':Front:Default:default' );
 		}
-
-		$this->getComponent( 'breadcrumbs' )->add( 'Prihlásiť', 'Sign:in' );
-
-		$this->template->fb = TRUE;
-		$this->setHeaderTags( NULL, NULL, $robots = 'noindex, nofolow' );
 
 		$this->setReferer( 'signInReferrer' );
 	}
@@ -53,16 +48,18 @@ class SignPresenter extends BasePresenter
 
 		$form->addText( 'user_name', 'Username:' )
 			->setRequired( 'Please enter your username.' )
-			->setAttribute( 'class', 'formEl' );
+			->setAttribute( 'class', 'form-control' )
+			->setAttribute( 'placeholder', 'Meno' );
 
 		$form->addPassword( 'password', 'Password:' )
 			->setRequired( 'Please enter your password.' )
-			->setAttribute( 'class', 'formEl' );
+			->setAttribute( 'class', 'form-control' )
+			->setAttribute( 'placeholder', 'Heslo' );
 
-		$form->addCheckbox( 'remember', ' Keep me signed in' );
+		$form->addCheckbox( 'remember', ' Zapamätať prihlásenie' );
 
-		$form->addSubmit( 'send', 'Prihlásiť' )
-			->setAttribute( 'class', 'formElB' );
+		$form->addSubmit( 'submit', 'Prihlásiť' )
+			->setAttribute( 'class', 'btn btn-primary' );
 
 		// call method signInFormSucceeded() on success
 		$form->onSuccess[] = array( $this, 'signInFormSucceeded' );

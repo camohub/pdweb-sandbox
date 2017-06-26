@@ -2,18 +2,18 @@
 
 namespace App\AdminModule\Presenters;
 
+
 use App;
-use App\Component\Breadcrumb;
-use Nette\Forms\Controls;
 use Tracy\Debugger;
 
 
-class DefaultPresenter extends BasePresenter
+class ConfigPresenter extends BasePresenter
 {
 
     protected function beforeRender()
     {
         $this->template->config = $this->context->parameters;
+        Debugger::barDump( 'blaaaaaaaaa');
     }
 
 }

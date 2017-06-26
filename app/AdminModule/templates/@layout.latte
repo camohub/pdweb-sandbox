@@ -2,52 +2,105 @@
 <html lang="sk">
 <head>
 	<meta charset="utf-8">
-	<title>Administrácia {$config['websiteName']}</title>
+	<title>Administrácia</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="author" content="Frio.sk">
-
 	<meta name="robots" content="noindex">
 
-	<link href="{$basePath}/adminassets/css/main.css" rel="stylesheet">
-
-	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-	<!--[if lt IE 9]>
-	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-	<![endif]-->
+	<link href="{$basePath}/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="{$basePath}/bower_components/AdminLTE/dist/css/AdminLTE.min.css" rel="stylesheet">
+	<link href="{$basePath}/bower_components/AdminLTE/dist/css/skins/skin-blue.min.css" rel="stylesheet">
+	{control adminCss}
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 </head>
 
-<body>
+<body class="skin-blue sidebar-open sidebar-mini">
 
-{include '_mainMenu.latte'}
+<div class="wrapper">
+	<header class="main-header">
 
-<div class="container-fluid">
-	<div class="row">
+		<!-- Logo -->
+		<a href="{plink :Admin:Default:default}" class="logo">
+			<!-- mini logo for sidebar mini 50x50 pixels -->
+			<span class="logo-mini"><b>PD</b>A</span>
+			<!-- logo for regular state and mobile devices -->
+			<span class="logo-lg"><b>PDWeb Admin</b></span>
+		</a>
 
-		{include '_sideBar.latte'}
+		<nav class="navbar navbar-static-top" role="navigation">
+			<!-- Sidebar toggle button-->
+			<a href="#" class="sidebar-toggle xs-font-size-14" data-toggle="offcanvas" role="button">
+				<span class="sr-only">Toggle navigation</span>
+			</a>
+			<!-- Navbar Right Menu -->
+			<div class="navbar-custom-menu">
+				<ul class="nav navbar-nav">
+					<li class="dropdown user user-menu">
+						<!-- Menu Toggle Button -->
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+							<!-- The user image in the navbar -->
+							<i class="fa fa-user"></i>
+							<!-- hidden-xs hides the username on small devices so only the image appears. -->
+							<span class="hidden-xs">{$user->identity->user_name}</span>
+						</a>
+						<ul class="dropdown-menu">
+							<!-- The user image in the menu -->
+							<li class="user-header">
+								<i class="fa fa-4x fa-user"></i>
+								<p>{$user->identity->user_name}</p>
+							</li>
 
-		<div class="{ifset $grid}col-md-{$grid}{else}col-md-12{/ifset} {ifset $sideBar}col-sm-offset-2{/ifset}">
-
-		{snippet flash}
-			<div n:if="count($flashes)" n:inner-foreach="$flashes as $flash" class="flash">
-				<div n:class="alert, alert-dismissible, fade, in, $flash->type == 'error' ? alert-danger : alert-success, $flash->type">
-					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-						<span aria-hidden="true">&times;</span>
-					</button>{$flash->message}
-				</div>
+							<!-- Menu Footer-->
+							<li class="user-footer">
+								<div class="pull-right">
+									<a href="{plink :Sign:out}" class="btn btn-default btn-flat">Odhlásiť</a>
+								</div>
+							</li>
+						</ul>
+					</li>
+				</ul>
 			</div>
-		{/snippet}
+		</nav>
+	</header>
 
-		{control breadcrumb}
+	<div class="sidebar-wrapper">
+		{control adminMenu}
+	</div>
 
-		{include #content}
+	<div class="content-wrapper">
+
+		<div class="content-header">
+			{ifset #title}{include #title}{else}PDWeb Admin{/ifset}
+			{control adminMenu:breadcrumb}
+		</div>
+
+		<div class="content">
+
+			{snippet flash}
+				<div n:if="count($flashes)" n:inner-foreach="$flashes as $flash" class="flash">
+					<div n:class="alert, alert-dismissible, fade, in, $flash->type == 'error' ? alert-danger : alert-success, $flash->type">
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>{$flash->message}
+					</div>
+				</div>
+			{/snippet}
+
+			{include #content}
 
 		</div>
 	</div>
+
 </div>
 
-{* Scripts *}
-{include '_scripts.latte'}
-{block scripts}{/block}
+
+{block scripts}
+	<script src="{$basePath}/bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="{$basePath}/bower_components/nette.ajax.js/nette.ajax.js"></script>
+	<script src="{$basePath}/bower_components/nette-live-form-validation/live-form-validation.js"></script>
+	<script src="{$basePath}/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<script src="{$basePath}/bower_components/AdminLTE/dist/js/app.min.js"></script>
+	<script src="{$basePath}/adminassets/js/main.js"></script>
+{/block}
 
 </body>
 </html>
