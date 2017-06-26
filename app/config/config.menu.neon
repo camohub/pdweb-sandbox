@@ -1,0 +1,24 @@
+
+extensions:
+	menu: DK\Menu\DI\Extension
+
+
+menu:
+
+	front:
+		controlClass: App\FrontModule\Components\Menu\FrontMenuControl
+		controlInterface: App\FrontModule\Components\Menu\IFrontMenuControlFactory
+
+		items:
+			Technology: :Front:Default:default#technology
+			About: :Front:Default:default#about
+			Contact: :Front:Default:default#contact
+
+	Admin:
+		controlClass: App\AdminModule\Components\Menu\AdminMenuControl
+		controlInterface: App\AdminModule\Components\Menu\IAdminMenuControlFactory
+
+		items:
+			Technology: :Front:Default:default#technology
+			About: :Front:Default:default#about
+			Contact: :Front:Default:default#contact

@@ -1,0 +1,46 @@
+
+extensions:
+	webloader: WebLoader\Nette\Extension
+
+
+services:
+	cssUrlFilter: WebLoader\Filter\CssUrlsFilter(%wwwDir%)
+	lessFilter: WebLoader\Filter\LessFilter
+	cssMin: Joseki\Webloader\CssMinFilter
+	jsMin: Joseki\Webloader\JsMinFilter
+
+
+webloader:
+	css:
+		front:
+			watchFiles:
+				- {files: ["*.less"], in: %wwwDir%/frontassets/css}
+			files:
+				- {files: ["main.less"], from: %wwwDir%/frontassets/css}
+			filters:
+				- @cssUrlFilter
+				#- @cssMin
+			fileFilters:
+				- @lessFilter
+		admin:
+			watchFiles:
+				- {files: ["*.less"], in: %wwwDir%/adminassets/css}
+			files:
+				- {files: ["main.less"], from: %wwwDir%/adminassets/css}
+			filters:
+				- @cssUrlFilter
+				#- @cssMin
+			fileFilters:
+				- @lessFilter
+
+	js:
+		front:
+			files:  #only non-minified files here
+				- {files: ["main.js"], from: %wwwDir%/frontassets/js}
+			filters:
+				- @jsMin
+		admin:
+			files:  #only non-minified files here
+				- {files: ["main.js"], from: %wwwDir%/adminassets/js}
+			filters:
+				- @jsMin
