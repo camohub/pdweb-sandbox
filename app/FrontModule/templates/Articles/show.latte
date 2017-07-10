@@ -1,0 +1,80 @@
+
+{block content}
+
+<div class="row xs-mar-ver-30">
+
+	{include '../sidebar.latte'}
+
+	{if isset($articles)}{* Show more articles *}
+
+		<div class="col-xs-12 col-sm-9 col-lg-10">
+
+			{foreach $articles as $a}
+				<h1 class="xs-mar-bot-30"><a n:href=":Front:Articles:show 'title' => $a->slug">{$a->title}</a></h1>
+				<div class="xs-mar-bot-100">{$a->perex|noescape}</div>
+			{/foreach}
+
+			{control vp}
+
+		</div>
+
+	{/if}
+
+
+	{if isset($article)}{* Shows one article *}
+
+		<div class="col-xs-12 col-sm-9 col-lg-10">
+			{if $article->acl_users_id == $user->id || $user->isInRole('admin')}
+				<a n:href=":Admin:Articles:edit $article->id" class="small pull-right">editovať</a>
+			{/if}
+			<h1 class="xs-mar-bot-30">{$article->title}</h1>
+			<div class="small">
+				{$article->created|date:'j. F Y'|datum:sk}<span n:if="$article->user"> / {$article->user->user_name}</span>
+			</div>
+			<div class="xs-mar-ver-30">{$article->perex|noescape}{$article->content|noescape}</div>
+			<div class="clear pT10"></div>
+			{* Because of floaded images *}
+			<div class="fb-like" data-colorscheme="dark" data-share="true" data-show-faces="true" data-width="450"></div>
+
+
+			<div class="hr"></div><a name="commentsAnch"></a>
+
+			{***** comments **********************}
+
+			{if $user->isAllowed('comment', 'add')}
+				{form commentForm}
+					<div class="alert alert-dismissible fade in alert-danger" n:if="$form->hasErrors()">
+						<div n:foreach="$form->getErrors() as $error">
+							<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+										aria-hidden="true">&times;</span></button>
+							{$error}
+						</div>
+					</div>
+					<div class="form-group">{label content}{/label}</div>
+					<div class="form-group">{input content}</div>
+					<div class="form-group">{input name}{input send}</div>
+				{/form}
+			{else}
+				<span>Ak chcete pridávať komentáre musíte sa <a n:href=":Front:Sign:in">prihlásiť</a></span>
+			{/if}
+
+			<div class="xs-mar-ver-30" id="comments">
+				<div n:foreach="$comments as $comment" n:class="xs-mar-ver-15">
+					<div class="small">
+						<span class="user-name">{$comment->user_name}</span>&nbsp;&nbsp;&nbsp; {$comment->created|date:'j. F Y'|datum:sk}
+					</div>
+					<div>
+						{if $comment->status == $commentsArticlesRepository::STATUS_UNPUBLISHED}
+							<i class="c3">Komentár bol zmazaný.</i>
+						{else}{$comment->content|noescape}{/if}
+					</div>
+				</div>
+			</div>
+		</div>
+
+	{/if}
+
+</div>
+
+{include 'show.js.latte'}
+

@@ -7,8 +7,8 @@ namespace App\Model;
 use Nette;
 use App;
 use Nette\Security\Passwords;
-use App\Model\Repositories\UsersRepository;
-use App\Model\Repositories\UsersAclRolesRepository;
+use App\Model\Repositories\AclUsersRepository;
+use App\Model\Repositories\AclUsersRolesRepository;
 use Nette\Utils\Random;
 
 
@@ -22,18 +22,18 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 	/** @var Nette\Database\Context */
 	private $database;
 
-	/** @var UsersRepository */
-	private $usersRepository;
+	/** @var AclUsersRepository */
+	private $aclUsersRepository;
 
-	/** @var UsersAclRolesRepository */
-	private $usersAclRolesRepository;
+	/** @var AclUsersRolesRepository */
+	private $aclUsersRolesRepository;
 
 
-	public function __construct( Nette\Database\Context $database, UsersRepository $uR, UsersAclRolesRepository $uARR )
+	public function __construct( Nette\Database\Context $database, AclUsersRepository $uR, AclUsersRolesRepository $uRR )
 	{
 		$this->database = $database;
-		$this->usersRepository = $uR;
-		$this->usersAclRolesRepository = $uARR;
+		$this->aclUsersRepository = $uR;
+		$this->aclUsersRolesRepository = $uRR;
 	}
 
 
@@ -47,7 +47,7 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 	{
 		list( $user_name, $password ) = $credentials;
 
-		$user_row = $this->usersRepository->findOneBy( [ UsersRepository::COL_NAME => $user_name, UsersRepository::COL_PASSWORD . ' NOT' => NULL ] );
+		$user_row = $this->aclUsersRepository->findOneBy( [ AclUsersRepository::COL_NAME => $user_name, AclUsersRepository::COL_PASSWORD . ' NOT' => NULL ] );
 
 		if ( ! $user_row )
 		{
@@ -67,10 +67,10 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 		}
 
 		$userArr = $user_row->toArray();
-		unset( $userArr[UsersRepository::COL_PASSWORD] );
+		unset( $userArr[AclUsersRepository::COL_PASSWORD] );
 
 		$rolesArr = array();
-		foreach( $user_row->related('users_acl_roles', 'users_id') as $role )
+		foreach( $user_row->related('acl_users_roles', 'acl_users_id') as $role )
 		{
 			$rolesArr[] = $role->ref('acl_roles', 'acl_roles_id')->name;
 		}
@@ -99,7 +99,7 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 
 		$params['roles'] = $this->aclRolesRepository->findBy( [ 'name' => $params['roles'] ] );
 
-		$params[UsersRepository::COL_PASSWORD] = Passwords::hash( $params['password'] );
+		$params[AclUsersRepository::COL_PASSWORD] = Passwords::hash( $params['password'] );
 		$params['resource'] = 'App';
 
 		// Do not use transacion here. It is used in RegisterPresenter
@@ -107,12 +107,12 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 		$code = Random::generate( 10,'0-9a-zA-Z' );
 		try
 		{
-			$row = $this->usersRepository->add([
-				UsersRepository::COL_NAME => $params['user_name'],
-				UsersRepository::COL_PASSWORD => $params['password'],
-				UsersRepository::COL_EMAIL => $params['email'],
-				UsersRepository::COL_ACTIVE => 0,
-				UsersRepository::COL_CONFIRMATION_CODE => $code,
+			$row = $this->aclUsersRepository->insert([
+				AclUsersRepository::COL_NAME => $params['user_name'],
+				AclUsersRepository::COL_PASSWORD => $params['password'],
+				AclUsersRepository::COL_EMAIL => $params['email'],
+				AclUsersRepository::COL_ACTIVE => 0,
+				AclUsersRepository::COL_CONFIRMATION_CODE => $code,
 			]);
 		}
 		catch(\PDOException $e)
@@ -123,11 +123,11 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 			if ( $info[0] == 23000 && $info[1] == 1062 )
 			{
 				// if/elseif returns the name of problematic field and value
-				if( $this->usersRepository->findOneBy( ['user_name = ?', $params['user_name']] ) )
+				if( $this->aclUsersRepository->findOneBy( ['user_name = ?', $params['user_name']] ) )
 				{
 					$msg = 'user_name';	$code = 1;
 				}
-				elseif( $this->usersRepository->findOneBy( ['email = ?', $params['email']] ) )
+				elseif( $this->aclUsersRepository->findOneBy( ['email = ?', $params['email']] ) )
 				{
 					$msg = 'email';	$code = 2;
 				}
@@ -136,7 +136,7 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 			else { throw $e; }
 		}
 
-		$this->usersAclRolesRepository->add( [UsersAclRolesRepository::COL_USERS_ID => $row->id, UsersAclRolesRepository::COL_ACL_ROLES_ID => 3] );
+		$this->aclUsersRolesRepository->insert( [AclUsersRolesRepository::COL_USERS_ID => $row->id, AclUsersRolesRepository::COL_ACL_ROLES_ID => 3] );
 
 		return $row;
 

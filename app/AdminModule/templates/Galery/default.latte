@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+	<meta charset="utf-8">
+	<title>Galérie</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="noindex">
+
+	<link href="{$basePath}/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="text-center">
+
+   	{control vp}
+
+	<img n:if="$images-:count()" n:foreach="$images as $image" src="{$basePath}/images/app/thumbnails/{$image->getName()}"
+		 onclick="insert_url( this.src )" class="" style="width: 150px;"><br>
+
+	{control vp}
+
+</div>
+
+<script>
+
+	function insert_url(url)
+	{
+		var params = top.tinymce.activeEditor.windowManager.getParams(),
+			input = params.input,
+			win = params.window,
+			page = params.page;
+
+		url = url.replace( 'thumbnails/', 'mediums/' );
+		win.document.getElementById(input).value = url;
+
+
+		top.tinymce.activeEditor.windowManager.close();
+	}
+
+	top.tinymce.activeEditor.imageBrowserPage = {$page};
+
+</script>
+
+</body>
+</html>
+
+
+

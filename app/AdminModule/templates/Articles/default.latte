@@ -1,0 +1,19 @@
+
+{block content}
+
+{define title}Articles <a n:href=":Admin:Articles:create" n:if="$user->isAllowed( 'article', 'add' )" class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Create new</a>{/define}
+
+<div class="row">
+	<div class="col-xs-12">
+		<div class="box">
+			{control articlesDataGrid}
+
+			{*{control articlesDataGrid5}*}
+		</div>
+
+	</div>
+</div>
+
+
+
+

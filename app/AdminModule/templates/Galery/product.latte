@@ -1,0 +1,56 @@
+{extends '../@layoutGalery.latte'}
+
+{block content}
+
+{form productUploadForm, class => 'form-inline row xs-mar-ver-15'}
+	<div n:if="$form->hasErrors()" class="col-xs-12 xs-mar-ver-15">
+		<div n:foreach="$form->getErrors() as $error" class="text-danger">{$error}</div>
+	</div>
+	<div class="col-xs-12">
+		<div class="form-group">{label files}{/label} {input files} {input submit}</div>
+	</div>
+{/form}
+
+<div class="row xs-mar-ver-30">
+	{if $images->count()}
+		<div class="col-xs-12 text-center">
+			{control vp}
+		</div>
+
+		<div n:foreach="$images as $image" class="col-xs-3 xs-mar-ver-15 text-center">
+			<img src="{$basePath}/uploads/products/{$image->products_id}/thumbnails/{$image->name}" onclick="insert_url( this.src )" class="" style="width: 150px;"><br>
+		</div>
+
+		<div class="col-xs-12 text-center">
+			{control vp}
+		</div>
+	{else}
+		<div class="col-xs-12">
+			<div class="color-5">Nemáte uložené žiadne obrázky k tomuto článku.</div>
+		</div>
+	{/if}
+</div>
+
+</div>
+
+
+<script>
+
+	function insert_url(url)
+	{
+		var params = top.tinymce.activeEditor.windowManager.getParams(),
+			input = params.input,
+			win = params.window,
+			page = params.page;
+
+		url = url.replace( 'thumbnails/', 'mediums/' );
+		win.document.getElementById(input).value = url;
+
+
+		top.tinymce.activeEditor.windowManager.close();
+	}
+
+	top.tinymce.activeEditor.imageBrowserPage = {$page};
+
+</script>
+

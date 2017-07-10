@@ -1,0 +1,29 @@
+<script>
+
+function defaultInit() {
+
+////////////////////////////////////////////////////////////////////////////////////////
+// TINYMCE INIT ///////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
+	tinymce.init({
+		selector: '#frm-tinyForm-editor',
+		//entity_encoding: "raw",
+		//relative_urls: false,
+		//menubar: 'file edit view table',
+		//toolbar: 'undo, redo, visualaid, cut, copy, paste, selectall, bold, italic, underline, strikethrough, subscript, superscript, removeformat, formats code',
+		//plugins: 'code advlist autolink link image lists charmap print preview table',
+		//image_description: false,
+		/*image_class_list: [
+			{ title: 'Left align', value: 'pull-left' },
+			{ title: 'Right align', value: 'pull-right' }
+		],
+
+		table_appearance_options: false,
+		content_css: {*$basePath*} + '/adminassets/css/tinymce-default.css'*/
+	});
+
+}
+
+window.addEventListener ? window.addEventListener( 'load', defaultInit ) : window.attachEvent( 'load', defaultInit );
+
+</script>

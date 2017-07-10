@@ -1,0 +1,34 @@
+
+{block content}
+
+{define title}{$article->title}{/define}
+
+<div class="row">
+	<div class="col-xs-12">
+		<div class="box">
+			<div class="box-header">
+				<div class="box-title with-border">Komentáre k článku</div>
+			</div>
+			<div class="box-body">
+				{snippet comments}
+					{if $comments->count()}
+						<div n:if="$comments->count()" n:class="xs-pad-15, $iterator->isOdd() ? bg-color-11"
+							 n:foreach="$comments as $comment">
+							<a n:href="visibility! comment_id => $comment->id"
+							   n:class="ajax, color-7, fa, fa-lg, pull-right, $comment->status == $commentsArticlesRepository::STATUS_PUBLISHED ? fa-trash-o : fa-minus-circle"
+							   title="{$comment->status == $commentsArticlesRepository::STATUS_PUBLISHED ? 'Unpublish' : 'Publish'}"> </a>
+
+							<div class="small"><b>{$comment->user_name}</b> {$comment->created|date:'j.n.Y H:i'}</div>
+							<div class="xs-mar-ver-15">{$comment->content}</div>
+						</div>
+					{else}
+						K článku neboli nájdené žiadne komentáre.
+					{/if}
+				{/snippet}
+			</div>
+		</div>
+	</div>
+</div>
+
+
+

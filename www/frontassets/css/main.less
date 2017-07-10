@@ -1,6 +1,7 @@
 @import "../../bower_components/bootstrap/less/bootstrap.less";
 @import "colors.less";
 @import "bootstrap_nav.less";
+@import "side_nav.less";
 
 
 html, body, h1, h2, h3, h4, div, ul, ol, li, form {
@@ -21,6 +22,8 @@ body {
 	color: @color-2;
 	font-size: 20px;
 }
+
+a:hover { text-decoration: none }
 
 #wrapper {
 	position:relative;
@@ -62,18 +65,31 @@ input:-webkit-autofill { -webkit-box-shadow: 0 0 0 30px white inset; }
 	top: 150px;
 	left: 2.5%;
 	width: 95%;
+	z-index: 9999;
+
+	.alert {
+		box-shadow: 0 7px 26px -6px @color-5;
+	}
 
 	@media( min-width: 768px ) {
 		left: 15%;
 		width: 70%;
 	}
+
+	@media( min-width: 992px ) {
+		left: 20%;
+		width: 60%;
+	}
 }
+
+.disp-none { display: none; }
 
 
 .xs-mar-ver-15 { margin-top: 15px; margin-bottom: 15px; }
 .xs-mar-ver-30 { margin-top: 30px; margin-bottom: 30px; }
 
-.xs-mar-top-100 { margin-top: 100px; }
+.xs-mar-bot-30 { margin-bottom: 30px; }
+.xs-mar-bot-100 { margin-bottom: 100px; }
 
 .xs-pad-ver-30 { padding-top: 30px; padding-bottom: 30px; }
 .xs-pad-top-30 { padding-top: 30px; }
@@ -109,4 +125,3 @@ input:-webkit-autofill { -webkit-box-shadow: 0 0 0 30px white inset; }
 	.md-pad-bot-30 { padding-bottom: 30px; }
 }
 
-.color-3 { color: @color-3; }

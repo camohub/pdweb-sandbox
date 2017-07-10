@@ -4,13 +4,18 @@
 namespace App\Presenters;
 
 
+use App;
 use Nette;
+use NasExt;
 use WebLoader\Nette\CssLoader;
 use WebLoader\Nette\JavaScriptLoader;
 
 
 abstract class BasePresenter extends Nette\Application\UI\Presenter
 {
+
+	/** @var \App\FrontModule\Components\ICamoMenuControlFactory @inject */
+	public $camoMenuFactory;
 
 	/** @var \App\FrontModule\Components\Menu\IFrontMenuControlFactory @inject */
 	public $frontMenuFactory;
@@ -26,7 +31,7 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
 	 * @desc Sets referrer url as string or '' to unique $id section for every page
 	 * @param string $id
 	 */
-	protected function setReferer( $id = '' )
+	public function setReferer( $id = '' )
 	{
 		if ( ! $id )
 		{
@@ -63,7 +68,7 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
 	 * @param string $id
 	 * @return bool|mixed|string
 	 */
-	protected function getReferer( $id = '' )
+	public function getReferer( $id = '' )
 	{
 		$refSess = $this->getSession( $id );
 		$url = $refSess->url;
@@ -79,6 +84,71 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
 		unset( $refSess->url );
 
 		return $url;
+	}
+
+
+	/**
+	 * @desc This method sets section id for javascript which opens/closes menu items.
+	 */
+	public function setCategoryId( $id )
+	{
+		$this['camoMenu']->setCategory( $id );
+	}
+
+
+	/**
+	 * @param $name
+	 * @return NasExt\Controls\VisualPaginator
+	 */
+	protected function createComponentVp( $name )
+	{
+		$control = new NasExt\Controls\VisualPaginator( $this, $name );
+		// enable ajax request, default is false
+		/*$control->setAjaxRequest();
+
+		$that = $this;
+		$control->onShowPage[] = function ($component, $page) use ($that) {
+		if($that->isAjax()){
+		$that->invalidateControl();
+		}
+		};*/
+		return $control;
+	}
+
+//// HELPERS //////////////////////////////////////////////////////////////////////////////
+
+
+
+/////////helpers//////////////////////////////////////////////////////
+
+	/**
+	 * @desc Helpers
+	 * @desc 1. To translates of moths and days names.
+	 * @desc 2. Adds prettyprint class to the pre tags.
+	 * @param null $class
+	 * @return Nette\Application\UI\ITemplate
+	 */
+	protected function createTemplate( $class = NULL )
+	{
+		$template = parent::createTemplate( $class );
+		$template->addFilter( 'datum', function ( $s, $lang = 'sk' )
+		{
+			$needles = array( 'Monday', 'Tuesday', 'Wensday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Mon', 'Tue', 'Wen', 'Thu', 'Fri', 'Sat', 'Sun' );
+			$sk = array( 'pondelok', 'utorok', 'streda', 'štvrtok', 'piatok', 'sobota', 'nedeľa', 'január', 'február', 'marec', 'apríl', 'máj', 'jún', 'júl', 'august', 'september', 'október', 'november', 'december', 'jan.', 'feb.', 'mar.', 'apr.', 'máj', 'jún', 'júl', 'aug.', 'sep.', 'okt.', 'nov.', 'dec.', 'Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne' );
+
+			return str_replace( $needles, $$lang, $s );
+		}
+		);
+
+		return $template;
+	}
+
+///// COMPONENTS ////////////////////////////////////////////////////////////////////////////
+
+	/** @return App\FrontModule\Components\CamoMenu */
+	protected function createComponentCamoMenu()
+	{
+		return $this->camoMenuFactory->create();
 	}
 
 

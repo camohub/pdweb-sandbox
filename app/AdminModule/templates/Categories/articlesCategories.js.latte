@@ -1,0 +1,86 @@
+<script>
+
+function articlesInit() {
+
+	///////////////////////////////////////////////////////////////////////
+	////// CREATE BTN HANDLERS ///////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////
+	$('.create-article-category').click( function()
+	{
+		$('#article-category-form').slideToggle();
+	});
+
+	///////////////////////////////////////////////////////////////////////
+	////// SAVE BTN SORTABLE LIST SERIALIZATION //////////////////////////
+	/////////////////////////////////////////////////////////////////////
+	$('.save-categories').mousedown( function()
+	{
+		var serialized = $( 'ul.sortable-wrapper' ).sortableListsToString();
+		var href = $( this ).attr( 'href' );
+
+		serialized = serialized.replace( /no-parent/g, '0' );
+		href = href.replace( /&categoryItems[^&]+/g, '' );  // If original url contains categoryItems these have to be removed.
+
+		$( this ).attr( 'href', href + '&' + serialized );  // Not need to solve ? cause links to handle methods always have do= param
+	});
+
+	///////////////////////////////////////////////////////////////////////
+	////// DELETE BTN ////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////
+	$('.sortable-wrapper').on('click', '.fa-trash-o', function()
+	{
+		return confirm( 'Naozaj chcete položku zmazať?' );
+	});
+
+	/////////////////////////////////////////////////////////////////////
+	///// NETTE AJAX EXTENSIONS ////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////
+	$.nette.ext('menu', {
+		before: function (jqXHR, settings)
+		{
+			var sn = settings.nette;
+			if(!sn) return true;
+
+			if(sn.el.hasClass('stop-ajax'))
+			{
+				return false;
+			}
+			else if ( sn.el.hasClass( 'fa-trash-o' ) )
+			{
+				return confirm( 'Naozaj chcete položku zmazať?' );
+				sn.el.addClass('stop-ajax');
+			}
+
+			$('#editSection, #createSection').slideUp();
+			$('.alert' ).fadeOut();
+			$('#ajax-spinner').css( { 'display': 'block' } );
+		},
+		complete: function ( jqXHR, status, settings )
+		{
+			$('#ajax-spinner').css( { 'display': 'none' } );
+			this.counter--;
+
+			$('#sideMenu').find( 'ul' ).css( 'display', 'block' );
+
+			if (this.counter <= 0) {
+
+			}
+		},
+		error: function ()
+		{
+			$( '#snippet--flash' ).html(
+				'<div class="alert alert-dismissible fade in alert-danger">' +
+				'<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+				'<span aria-hidden="true">×</span></button>Pri spracovaní požiadavky došlo k  chybe.' +
+				'</div>'
+			);
+		}
+	});
+
+	// END OF NETTE AJAX EXTENSIONS ///////////////////////////////////////////////
+
+}
+
+window.addEventListener ? window.addEventListener( 'load', articlesInit ) : window.attachEvent( 'onload', articlesInit );
+
+</script>

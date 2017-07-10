@@ -1,23 +1,27 @@
+
 {
-  "name": "pdweb sandbox",
-  "homepage": "https://pdweb.sk",
-  "authors": [
-    "pdweb masters"
-  ],
-  "description": "Javascript dependencies for pdweb/sandbox.",
-  "license": "MIT",
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests"
-  ],
-  "dependencies": {
-    "jquery": "^2.2.1",
-    "bootstrap": "^3.3.7",
-    "nette.ajax.js": "^2.3.0",
-    "nette-live-form-validation": "^1.8.0",
-    "AdminLTE": "admin-lte#^2.3.11"
-  }
+	"name": "pdweb sandbox",
+	"homepage": "https://pdweb.sk",
+	"authors": [
+		"pdweb masters"
+	],
+	"description": "Javascript dependencies for pdweb/sandbox.",
+	"license": "MIT",
+	"ignore": [
+		"**/.*",
+		"node_modules",
+		"bower_components",
+		"test",
+		"tests"
+	],
+	"dependencies": {
+		"jquery": "^2.2.1",
+		"bootstrap": "^3.3.7",
+		"nette.ajax.js": "^2.3.0",
+		"nette-live-form-validation": "^1.8.0",
+		"AdminLTE": "admin-lte#^2.3.11",
+		"tinymce": "^4.6.4",
+		"ublaboo-datagrid": "^5.4.1",
+		"jquery-sortable-lists": "^1.3.0"
+	}
 }

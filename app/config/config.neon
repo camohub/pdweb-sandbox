@@ -22,11 +22,42 @@ includes:
 
 services:
 	router: App\RouterFactory::createRouter
+	authorizatorFactory: App\Model\AuthorizatorFactory
+	authorizator: @authorizatorFactory::create
 	- App\Model\UserManager
-	- App\Forms\FormFactory
-	- App\Forms\SignInFormFactory
 
 	#REPOSITORIES
-	- App\Model\Repositories\UsersRepository
-	- App\Model\Repositories\UsersAclRolesRepository
+	- App\Model\Repositories\AclUsersRepository
+	- App\Model\Repositories\AclUsersRolesRepository
+	- App\Model\Repositories\ModulesRepository
+	- App\Model\Repositories\ArticlesRepository
+	- App\Model\Repositories\CategoriesArticlesRepository
+	- App\Model\Repositories\ArticlesCategoriesArticlesRepository
+	- App\Model\Repositories\CommentsArticlesRepository
+	- App\Model\Repositories\CategoriesProductsRepository
+	- App\Model\Repositories\ProductsCategoriesProductsRepository
+	- App\Model\Repositories\UploadsArticlesRepository
+	- App\Model\Repositories\UploadsProductsRepository
+
+	#SERVICES
+	- App\Model\Services\ArticlesService
+	- App\Model\Services\CategoriesArticlesService
+	- App\Model\Services\UploadsArticlesService(%wwwDir%)
+	- App\Model\Services\UploadsProductsService(%wwwDir%)
+	- App\Model\Services\CommentsArticlesService
+
+	#FORMS
+	- App\Forms\FormFactory
+	- App\FrontModule\Forms\SignFormFactory
+	- App\FrontModule\Forms\CommentFormFactory
+	- App\AdminModule\Forms\ArticlesUploadFormFactory
+	- App\AdminModule\Forms\ArticleFormFactory
+	- App\AdminModule\Forms\ArticlesCategoryFormFactory
+	- App\AdminModule\Forms\ArticlesCategoryEditFormFactory
+
+	#COMPONENTS
+	- App\FrontModule\Components\ICamoMenuControlFactory
+	- App\AdminModule\Components\ArticlesDataGridFactory
+	- App\AdminModule\Components\ArticlesDataGrid5Factory
+
 

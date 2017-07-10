@@ -1,0 +1,16 @@
+
+<script>
+
+function showInit()
+{
+
+	$('.user-name').on('click', function ()
+	{
+		var area = $('#frm-commentForm-content');
+		area.val(area.val() + '**' + $(this).text() + '** ').focus();
+	});
+
+}
+
+window.addEventListener ? window.addEventListener( 'load', showInit ) : window.attachEvent( 'onload', showInit );
+</script>

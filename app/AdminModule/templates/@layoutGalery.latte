@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+	<meta charset="utf-8">
+	<title>Galérie</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="noindex">
+
+	<link href="{$basePath}/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+	{control adminCss}
+
+</head>
+
+<body>
+
+<div class="container-fluid xs-font-size-15">
+
+	{snippet flash}
+		<div n:if="count($flashes)" n:inner-foreach="$flashes as $flash" class="flash xs-mar-ver-15">
+			<div n:class="alert, alert-dismissible, fade, in, $flash->type == 'error' ? alert-danger : alert-success, $flash->type">
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>{$flash->message}
+			</div>
+		</div>
+	{/snippet}
+
+	{include #content}
+
+</div>
+
+{block scripts}
+	<script src="{$basePath}/bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="{$basePath}/bower_components/nette.ajax.js/nette.ajax.js"></script>
+	{*<script src="{$basePath}/bower_components/nette-live-form-validation/live-form-validation.js"></script>*}
+	<script src="{$basePath}/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<script src="{$basePath}/adminassets/js/main.js"></script>
+{/block}
+
+</body>
+</html>

@@ -1,0 +1,64 @@
+<script>
+	{*
+	 	This var is used by main.js which opens/closes categories.
+	 	It is current category id. You can set it in presenter via $this[menu]->setCategory( $id ).
+	*}
+	var category_id = {$current_id};
+</script>
+
+{cache $categoriesArticlesRepository::CACHE, tags => [ $categoriesArticlesRepository::CACHE_TAG ]}
+
+<div id="categories-articles">
+
+	{block menu}
+		<ul>
+			{foreach $category as $item}
+				<li id="{$item->id}">
+					{if $item->url_params}
+						<a href="{plink $item->url (expand)explode(' ', $item->url_params)}">{$item->name}</a>
+					{else}
+						<a href="{plink $item->url}">{$item->name}</a>
+					{/if}
+
+					{if $category = $categoriesArticlesRepository->findBy( [ 'parent_id' => $item->id ] )->fetchAll() }
+						{include menu, category => $category } {* RECURSION *}
+					{/if}
+				</li>
+			{/foreach}
+		</ul>
+	{/block}
+
+</div>
+
+{/cache}
+
+<script>
+
+//////////////////////////////////////////////////////////////////////////////////////////
+///// Menu - open/close section handler /////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+function categoriesArticlesInit() {
+
+	{* Current category id. You can set it in presenter via $this[menu]->setCategory( $id ). *}
+	var category_id = {$current_id};
+	var no_current = true;
+	var side_menu = $( '#categories-articles' );
+
+	side_menu.find( 'li' ).each( function()
+	{
+		if ( $( this ).attr( 'id' ) == category_id )  // category_id comes from menu.latte
+		{
+			$( this ).addClass( 'current-li' ).children( 'a' ).addClass( 'current-a' );
+			$( this ).parents( 'li' ).addClass( 'current-li' );
+
+			no_current = false;
+		}
+	} );
+
+	//if( no_current ) side_menu.find( 'ul' ).css( 'display', 'block' );
+}
+
+window.addEventListener ? window.addEventListener( 'load', categoriesArticlesInit ) : window.attachEvent( 'onload', categoriesArticlesInit );
+
+</script>

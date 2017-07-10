@@ -11,8 +11,23 @@ menu:
 
 		items:
 			Technology: :Front:Default:default#technology
-			About: :Front:Default:default#about
-			Contact: :Front:Default:default#contact
+
+			Login:
+				title: Login
+				target: :Front:Sign:in
+				allow:
+					loggedIn: false
+			Logout:
+				title: Logout
+				target: :Front:Sign:out
+				allow:
+					loggedIn: true
+			Admin:
+				title: Admin
+				target: :Admin:Default:default
+				allow:
+					loggedIn: true
+					roles: [editor, admin]
 
 	Admin:
 		controlClass: App\AdminModule\Components\Menu\AdminMenuControl
@@ -26,20 +41,21 @@ menu:
 				title: Config
 				target: :Admin:Config:default
 				data: [icon=cog]
-			Config2:
-				title: Config
-				target: :Admin:Config:default
-				data: [icon=cog]
-			Config3:
-				title: Config
-				target: :Admin:Config:default
-				data: [icon=cog]
+			Articles:
+				title: Articles
+				target: :Admin:Articles:default
+				data: [icon=pencil]
+
+			Categories:
+				title: Categories
+				target: :Admin:Categories:default
+				data: [icon=sitemap]
 				items:
-					Config4:
-						title: Config4
-						target: :Admin:Config:default
-						data: [icon=cog]
-					Config5:
-						title: Config5
-						target: :Admin:Config:default
-						data: [icon=cog]
+					CategoriesArticles:
+						title: Articles categories
+						target: :Admin:Categories:articlesCategories
+						data: [icon=circle-o]
+					CategoriesProducts:
+						title: Products categories
+						target: :Admin:Categories:productsCategories
+						data: [icon=circle-o]

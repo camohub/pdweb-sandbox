@@ -1,0 +1,25 @@
+table.mce-item-table {
+    width: 100%;
+    min-width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+table.mce-item-table td {
+    padding: 7px;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid #ddd;
+}
+
+.image-left {
+    float: left;
+    margin: 3px 3px 3px 0;
+}
+
+.image-right {
+    float: right;
+    margin: 3px 0 3px 3px;
+}
+
+.pad-ver-50-px { padding-left: 50px; padding-right: 50px; }

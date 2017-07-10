@@ -7,9 +7,24 @@
 	<meta name="robots" content="noindex">
 
 	<link href="{$basePath}/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
 	<link href="{$basePath}/bower_components/AdminLTE/dist/css/AdminLTE.min.css" rel="stylesheet">
 	<link href="{$basePath}/bower_components/AdminLTE/dist/css/skins/skin-blue.min.css" rel="stylesheet">
+
+	<!-- UBLABOO DATAGRID CSS -->
+	<link rel="stylesheet" type="text/css" href="{$basePath}/bower_components/happy/dist/happy.css">
+	<link rel="stylesheet" type="text/css" href="{$basePath}/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css">
+	<link rel="stylesheet" type="text/css" href="{$basePath}/bower_components/ublaboo-datagrid/assets/dist/datagrid.css">
+	<!-- Use this css for ajax spinners -->
+	<link rel="stylesheet" type="text/css" href="{$basePath}/bower_components/ublaboo-datagrid/assets/dist/datagrid-spinners.css">
+	<!-- Include this css when using FilterMultiSelect (silviomoreto.github.io/bootstrap-select) -->
+	{*<link rel="stylesheet" type="text/css" href="{$basePath}/bower_components/bootstrap-select/dist/css/bootstrap-select.css">*}
+	<!-- END OF UBLABOO DATAGRID CSS -->
+
 	{control adminCss}
+
+	<script src="{$basePath}/bower_components/jquery/dist/jquery.min.js"></script>
+
 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 </head>
 
@@ -52,7 +67,7 @@
 							<!-- Menu Footer-->
 							<li class="user-footer">
 								<div class="pull-right">
-									<a href="{plink :Sign:out}" class="btn btn-default btn-flat">Odhlásiť</a>
+									<a href="{plink :Front:Sign:out}" class="btn btn-default btn-flat">Odhlásiť</a>
 								</div>
 							</li>
 						</ul>
@@ -69,7 +84,7 @@
 	<div class="content-wrapper">
 
 		<div class="content-header">
-			{ifset #title}{include #title}{else}PDWeb Admin{/ifset}
+			<b>{ifset #title}{include #title}{else}PDWeb Admin{/ifset}</b>
 			{control adminMenu:breadcrumb}
 		</div>
 
@@ -94,13 +109,33 @@
 
 
 {block scripts}
-	<script src="{$basePath}/bower_components/jquery/dist/jquery.min.js"></script>
+
+	{*<script src="{$basePath}/bower_components/tinymce/tinymce.min.js"></script>*}
 	<script src="{$basePath}/bower_components/nette.ajax.js/nette.ajax.js"></script>
 	<script src="{$basePath}/bower_components/nette-live-form-validation/live-form-validation.js"></script>
+	{*<script src="{$basePath}/bower_components/nette-forms/src/assets/netteForms.js"></script>*}
 	<script src="{$basePath}/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 	<script src="{$basePath}/bower_components/AdminLTE/dist/js/app.min.js"></script>
+	<script src="{$basePath}/bower_components/tinymce/tinymce.min.js"></script>
 	<script src="{$basePath}/adminassets/js/main.js"></script>
+
+	<!-- UBLABOO DATAGRID Use this tiny js for that pretty checkboxes (https://github.com/paveljanda/happy) -->
+	<script src="{$basePath}/bower_components/happy/dist/happy.js"></script>
+	<script src="{$basePath}/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.js"></script>
+	<script src="{$basePath}/bower_components/jquery-ui-sortable/jquery-ui-sortable.js"></script>
+	<script src="{$basePath}/bower_components/ublaboo-datagrid/assets/dist/datagrid.js"></script>
+	<!-- UBLABOO DATAGRID It is recommended to include this JS file with just a few bits. It refreshes URL on non ajax request -->
+	<script src="{$basePath}/bower_components/ublaboo-datagrid/assets/dist/datagrid-instant-url-refresh.js"></script>
+	<!-- UBLABOO DATAGRID Use this little extension for ajax spinners -->
+	<script src="{$basePath}/bower_components/ublaboo-datagrid/assets/dist/datagrid-spinners.js"></script>
+	<!-- UBLABOO DATAGRID Include bootstrap.js for proper behaviour of ColumnStatus -->
+	<script src="{$basePath}/bower_components/bootstrap/dist/js/bootstrap.js"></script>
+	<!-- UBLABOO DATAGRID Include bootstrap-select.js when using FilterMultiSelect (silviomoreto.github.io/bootstrap-select) -->
+	{*<script src="{$basePath}/bower_components/bootstrap-select/dist/js/bootstrap-select.js"></script>*}
+
 {/block}
+
+{block otherScripts}{/block}
 
 </body>
 </html>

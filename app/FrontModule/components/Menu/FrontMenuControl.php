@@ -10,9 +10,9 @@ use Tracy\Debugger;
 class FrontMenuControl extends DK\Menu\UI\Control
 {
 
-	public function renderTop()
+	public function render()
 	{
-		$this->template->setFile( __DIR__ . '/Top.latte' );
+		$this->template->setFile(__DIR__ . '/templates/frontMenu.latte');
 		$this->template->menu = $this->getMenu();
 		$this->template->render();
 	}

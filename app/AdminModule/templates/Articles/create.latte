@@ -1,0 +1,47 @@
+
+{block content}
+
+<div class="row">
+	<div class="col-xs-12">
+		<div class="box">
+			<div class="box-body">
+				{form articleForm}
+					<div class="alert alert-dismissible alert-danger fade in" n:if="$form->hasErrors()">
+						<div n:foreach="$form->errors as $error">{$error}</div>
+					</div>
+					<div class="xs-mar-ver-15">
+						{label meta_desc}{/label} <span class="fa fa-question-circle" title="Dôležité z hľadiska SEO. Vyplňte jednou výstižnou vetou a použite kľúčové slová."> </span><br>
+						{input meta_desc}
+					</div>
+					<div class="xs-mar-ver-15">
+						{label title}{/label} <span class="fa fa-question-circle" title="Nadpis článku. Použite kľúčové slová."> </span><br>
+						{input title}
+					</div>
+					<div class="xs-mar-ver-15">
+						{label perex}{/label} <span class="fa fa-question-circle" title="Úvod do textu. Zobrazí sa pred textom a ako skrátený text. Používajte kľúčové slová.
+	Kód a zoznamy sa ukončujú dvojitým stlačením klávesy enter."> <!-- Odriadkovanie v title zachovat!!! --></span><br>
+						{input perex}
+					</div>
+					<div class="xs-mar-ver-15">
+						{label content}{/label} <span class="fa fa-question-circle" title="Používajte kľúčové slová. Najmä v nadpisoch a zvýraznených výrazoch.
+	Kód a zoznamy sa ukončujú dvojitým stlačením klávesy enter."> <!-- Odriadkovanie v title zachovat!!! --></span><br>
+						{input content}
+					</div>
+					<div class="xs-mar-ver-15">
+						{label categories}{/label}<br>
+						{input categories}
+					</div>
+					<div class="xs-mar-ver-15">
+						{label articles_statuses_id}{/label}
+						{input articles_statuses_id}
+					</div>
+					<div class="xs-mar-ver-15">
+						{input sbmt}
+					</div>
+				{/form}
+			</div>
+		</div>
+	</div>
+</div>
+
+{include 'create.js.latte'}

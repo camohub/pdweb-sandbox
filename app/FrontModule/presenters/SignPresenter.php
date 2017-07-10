@@ -1,15 +1,20 @@
 <?php
 
 
-namespace App\Presenters;
+namespace App\FrontModule\Presenters;
 
 
 use Nette;
 use App;
+use App\FrontModule\Forms\SignFormFactory;
 
 
 class SignPresenter extends BasePresenter
 {
+
+	/** @var SignFormFactory @inject */
+	public $signFormFactory;
+
 
 	public function renderIn()
 	{
@@ -27,43 +32,19 @@ class SignPresenter extends BasePresenter
 
 	public function actionOut()
 	{
-		$this->getUser()->logout();
+		$this->getUser()->logout( true );
 		$this->flashMessage( 'Boli ste odhlásený.' );
 
-		$this->redirect( 'Articles:show' );
+		$this->redirect( ':Front:Default:default' );
 	}
 
 
 //////component//////////////////////////////////////////////////////////////
 
-	/**
-	 * Sign-in form factory.
-	 * @return Nette\Application\UI\Form
-	 */
-	protected function createComponentSignInForm()
+
+	protected function createComponentSignForm()
 	{
-		$form = new Nette\Application\UI\Form;
-
-		$form->addProtection( 'Vypršal čas vyhradený pre odoslanie formulára. Z dôvodu rizika útoku CSRF bola požiadavka na server zamietnutá.' );
-
-		$form->addText( 'user_name', 'Username:' )
-			->setRequired( 'Please enter your username.' )
-			->setAttribute( 'class', 'form-control' )
-			->setAttribute( 'placeholder', 'Meno' );
-
-		$form->addPassword( 'password', 'Password:' )
-			->setRequired( 'Please enter your password.' )
-			->setAttribute( 'class', 'form-control' )
-			->setAttribute( 'placeholder', 'Heslo' );
-
-		$form->addCheckbox( 'remember', ' Zapamätať prihlásenie' );
-
-		$form->addSubmit( 'submit', 'Prihlásiť' )
-			->setAttribute( 'class', 'btn btn-primary' );
-
-		// call method signInFormSucceeded() on success
-		$form->onSuccess[] = array( $this, 'signInFormSucceeded' );
-		return $form;
+		return $this->signFormFactory->create();
 	}
 
 
@@ -100,7 +81,7 @@ class SignPresenter extends BasePresenter
 			$this->redirectUrl( $url );
 		}
 
-		$this->redirect( ':Articles:show' );
+		$this->redirect( ':Front:Default:default' );
 
 	}
 
