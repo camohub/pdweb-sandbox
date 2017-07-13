@@ -4,6 +4,7 @@ namespace App\FrontModule\Forms;
 
 
 use App;
+use Kdyby\Translation\Translator;
 use Nette;
 use Nette\Application\UI\Form;
 use Tracy\Debugger;
@@ -12,12 +13,20 @@ use Tracy\Debugger;
 class SignFormFactory
 {
 
+	/** @var  Translator */
+	protected $translator;
+
+	/** @var  Translator */
+	protected $pTranslator;
+
 	/** @var  Nette\Security\User */
 	protected $user;
 
 
-	public function __construct( Nette\Security\User $u )
+	public function __construct( Translator $tr, Nette\Security\User $u )
 	{
+		$this->translator = $tr;
+		$this->pTranslator = $this->translator->domain( 'front.forms.sign' );
 		$this->user = $u;
 	}
 
@@ -26,21 +35,21 @@ class SignFormFactory
 	{
 		$form = new Nette\Application\UI\Form;
 
-		$form->addProtection( 'Vypršal čas vyhradený pre odoslanie formulára. Z dôvodu rizika útoku CSRF bola požiadavka na server zamietnutá.' );
+		$form->setTranslator( $this->pTranslator );
 
-		$form->addText( 'user_name', 'Username:' )
-			->setRequired( 'Please enter your username.' )
-			->setAttribute( 'class', 'form-control' )
-			->setAttribute( 'placeholder', 'Meno' );
+		$form->addProtection( 'csrf' );
 
-		$form->addPassword( 'password', 'Password:' )
-			->setRequired( 'Please enter your password.' )
-			->setAttribute( 'class', 'form-control' )
-			->setAttribute( 'placeholder', 'Heslo' );
+		$form->addText( 'user_name', 'user_name.label' )
+			->setRequired( 'user_name.required' )
+			->setAttribute( 'class', 'form-control' );
 
-		$form->addCheckbox( 'remember', ' Zapamätať prihlásenie' );
+		$form->addPassword( 'password', 'password.label' )
+			->setRequired( 'password.required' )
+			->setAttribute( 'class', 'form-control' );
 
-		$form->addSubmit( 'submit', 'Prihlásiť' )
+		$form->addCheckbox( 'remember', 'remember.label' );
+
+		$form->addSubmit( 'submit', 'submit.label' )
 			->setAttribute( 'class', 'btn btn-primary' );
 
 		// call method signInFormSucceeded() on success
@@ -74,13 +83,12 @@ class SignFormFactory
 		}
 		catch ( App\Exceptions\AccessDeniedException $e )
 		{
-			$presenter->flashMessage( 'Váš účet ešte nebol aktivovaný emailom, alebo je zablokovaný.' );
+			$presenter->flashMessage( 'front.forms.sign.access-denied' );
 			return;
 		}
 
-		$presenter->flashMessage( 'Vitajte ' . $values['user_name'] );
+		$presenter->flashMessage( 'front.forms.sign.success' );
 
-		Debugger::barDump( $presenter );
 		if ( $url = $presenter->getReferer( 'signInReferrer' ) )
 		{
 			$presenter->redirectUrl( $url );

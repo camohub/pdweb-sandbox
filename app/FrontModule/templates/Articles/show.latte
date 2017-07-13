@@ -18,14 +18,13 @@
 
 		</div>
 
-	{/if}
 
 
-	{if isset($article)}{* Shows one article *}
+	{elseif isset($article)}{* Shows one article *}
 
 		<div class="col-xs-12 col-sm-9 col-lg-10">
 			{if $article->acl_users_id == $user->id || $user->isInRole('admin')}
-				<a n:href=":Admin:Articles:edit $article->id" class="small pull-right">editovať</a>
+				<a n:href=":Admin:Articles:edit $article->id" class="small pull-right">{_articles.show.edit}</a>
 			{/if}
 			<h1 class="xs-mar-bot-30">{$article->title}</h1>
 			<div class="small">
@@ -55,7 +54,7 @@
 					<div class="form-group">{input name}{input send}</div>
 				{/form}
 			{else}
-				<span>Ak chcete pridávať komentáre musíte sa <a n:href=":Front:Sign:in">prihlásiť</a></span>
+				<span>{_articles.show.sign} <a n:href=":Front:Sign:in">{_articles.show.sign2}</a></span>
 			{/if}
 
 			<div class="xs-mar-ver-30" id="comments">
@@ -65,7 +64,7 @@
 					</div>
 					<div>
 						{if $comment->status == $commentsArticlesRepository::STATUS_UNPUBLISHED}
-							<i class="c3">Komentár bol zmazaný.</i>
+							<i class="c3">{_articles.show.comment-deleted}</i>
 						{else}{$comment->content|noescape}{/if}
 					</div>
 				</div>

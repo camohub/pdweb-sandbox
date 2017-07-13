@@ -2,27 +2,23 @@
  * @param string   $basePath web base path
  * @param array    $flashes  flash messages
  *}
+{translator 'front'}
 <!DOCTYPE html>
 <html>
 <head>
 
-	{default $meta_title = 'PDWeb'}
-	{default $meta_desc = 'Programovanie webových stránok Prievidza'}
-	{default $meta_keywords = 'Webové stránky, weby, eshopy, Prievidza'}
-	{default $meta_image = "http://pdweb.sk{$basePath}/images/logo.png"}
-
-	<title>{ifset #title}{block title|striptags}{/block}{/ifset}</title>
+	<title>{ifset $title}{$title}{else}{_header.title}{/ifset}</title>
 
 	<meta charset="utf-8">
-	<meta name="description" content="{$meta_desc}">
-	<meta name="keywords" content="{$meta_desc}">
+	<meta name="description" content="{ifset $meta_desc}{$meta_desc}{else}{_header.meta_desc}{/ifset}">
+	<meta name="keywords" content="{ifset $meta_keywords}{$meta_keywords}{else}{_header.meta_keywords}{/ifset}">
 	<meta name="viewport" content="width=device-width">
 
 	<meta property="og:url" content="{link //this}" />
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="{$meta_title}" />
-	<meta property="og:description" content="{$meta_desc}" />
-	<meta property="og:image" content="{$meta_image}" />
+	<meta property="og:title" content="{ifset $title}{$title}{else}{_header.title}{/ifset}" />
+	<meta property="og:description" content="{ifset $meta_desc}{$meta_desc}{else}{_header.meta_desc}{/ifset}" />
+	<meta property="og:image" content="{ifset $meta_image}{$meta_image}{else}http://pdweb.sk{$basePath}/images/logo.png{/ifset}" />
 
 
 	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
@@ -64,7 +60,7 @@
 			<div n:class="alert, alert-dismissible, fade, in, $flash->type == 'error' ? alert-danger : alert-success, $flash->type">
 				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
-				</button>{$flash->message}
+				</button>{_//$flash->message}
 			</div>
 		</div>
 	{/snippet}
@@ -96,3 +92,4 @@
 
 </body>
 </html>
+{/translator}

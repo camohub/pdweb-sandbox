@@ -1,0 +1,54 @@
+header:
+	title: 'PDWeb'
+	meta_desc: 'Programovanie webových stránok Prievidza'
+	meta_keywords: 'Webové stránky, weby, eshopy, Prievidza'
+
+topmenu:
+	login: 'Prihlásiť'
+	logout: 'Odhlásiť'
+	technologies: 'Technológie'
+	admin: 'Administrácia'
+
+articles:
+	show:
+		not-found: 'Požadovanú stránku sa nepodarilo nájsť.'
+		flash1: 'toto je preklad flash1'
+		edit: 'editovať'
+		sign: 'Ak chcete pridávať komentáre musíte sa'
+		sign2: 'prihlásiť'
+		comment-deleted: 'Komentár bol zmazaný.'
+
+sign:
+	in:
+		h1: 'Prihlásiť'
+		register: 'Nemáte ešte účet? Zaregistrujte sa.'
+	out:
+		flash: 'Boli ste odhlásený.'
+	up:
+		h1: 'Registrácia.'
+		login: 'Už máte u nás účet? Prihláste sa.'
+
+forms:
+	comment-form:
+		csrf: 'Vypšal čas k odoslaniu formulára. Požiadavka bola zamietnutá.'
+		content.label: 'Vložte komentár'
+		content.required: 'Komentár je povinná položka'
+		name.label: 'Vyplňte meno'
+		send.label: 'Uložiť komentár'
+		success: 'Váš komntár bol uložený.'
+		error1: 'Pridávať komentáre môžu iba regirovaní užívatelia.'
+		error2: 'Došlo k chybe. Váš komentár sa nepodarilo odoslať. Skúste to prosím neskôr.'
+
+	sign:
+		csrf: 'Vypšal čas k odoslaniu formulára. Požiadavka bola zamietnutá.'
+		user_name.label: 'Meno'
+		user_name.required: 'Meno je povinná položka'
+		password.label: 'Heslo'
+		password.required: 'Heslo je povinná položka.'
+		remember.label: ' Zapamätať prihlásenie'
+		submit.label: 'Prihlásiť'
+		access-denied: 'Váš účet ešte nebol aktivovaný emailom, alebo je zablokovaný.'
+		not-found: 'Hľadaný uživateľ neexituje.'
+		invalid-credentials: 'The password is incorrect.'
+		success: 'Vaše prihlásenie prebehlo úspešne.'
+

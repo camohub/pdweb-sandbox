@@ -20,6 +20,16 @@ includes:
 	- ./config.menu.neon
 
 
+extensions:
+	translation: Kdyby\Translation\DI\TranslationExtension
+
+
+translation:
+	default: sk
+	fallback: [sk_SK, sk]
+	whitelist: [sk, cs, en]
+
+
 services:
 	router: App\RouterFactory::createRouter
 	authorizatorFactory: App\Model\AuthorizatorFactory
@@ -31,6 +41,7 @@ services:
 	- App\Model\Repositories\AclUsersRolesRepository
 	- App\Model\Repositories\ModulesRepository
 	- App\Model\Repositories\ArticlesRepository
+	- App\Model\Repositories\ArticlesLangsRepository
 	- App\Model\Repositories\CategoriesArticlesRepository
 	- App\Model\Repositories\ArticlesCategoriesArticlesRepository
 	- App\Model\Repositories\CommentsArticlesRepository

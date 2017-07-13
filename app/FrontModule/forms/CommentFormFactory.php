@@ -5,6 +5,7 @@ namespace App\FrontModule\Forms;
 
 use App;
 use App\Model\Services\CommentsArticlesService;
+use Kdyby\Translation\Translator;
 use Nette;
 use App\Model\Repositories\ArticlesRepository;
 use Nette\Application\UI\Form;
@@ -20,32 +21,43 @@ class CommentFormFactory
 	/** @var  ArticlesRepository */
 	protected $articlesRepository;
 
+	/** @var  Translator */
+	protected $translator;
+
+	/** @var  Translator */
+	protected $pTranslator;
+
 	/** @var  Nette\Security\User */
 	protected $user;
 
 
-	public function __construct( CommentsArticlesService $cAS, ArticlesRepository $aR, Nette\Security\User $u )
+	public function __construct( CommentsArticlesService $cAS, ArticlesRepository $aR, Translator $tr, Nette\Security\User $u )
 	{
 		$this->commentsArticlesService = $cAS;
 		$this->articlesRepository = $aR;
 		$this->user = $u;
+		$this->translator = $tr;
+		$this->pTranslator = $this->translator->domain( 'front.forms.comment-form' );
 	}
 
 
 	public function create()
 	{
 		$form = new Nette\Application\UI\Form;
-		$form->addProtection( 'Vypšal čas k odoslaniu formulára. Požiadavka bola zamietnutá.' );
 
-		$form->addTextArea( 'content', 'Vložte komentár' )
-			->setRequired( 'Komentár je povinná položka' )
+		$form->setTranslator( $this->pTranslator );
+
+		$form->addProtection( 'csrf' );
+
+		$form->addTextArea( 'content', 'content.label' )
+			->setRequired( 'content.required' )
 			->setAttribute( 'class', 'form-control' );
 
 		// This is a trap for robots
-		$form->addText( 'name', 'Vyplňte meno' )
+		$form->addText( 'name', 'name.label' )
 			->setAttribute( 'class', 'disp-none' );
 
-		$form->addSubmit( 'send', 'Uložiť komentár' )
+		$form->addSubmit( 'send', 'send.label' )
 			->setAttribute( 'class', 'btn btn-primary btn-sm' );
 
 		$form->onSuccess[] = [$this, 'formSucceeded'];
@@ -61,8 +73,8 @@ class CommentFormFactory
 
 		if ( ! $this->user->isAllowed( 'comment', 'add' ) )
 		{
-			$presenter->flashMessage( 'Pridávať komentáre môžu iba regirovaní užívatelia.', 'error' );
-			throw new App\Exceptions\AccessDeniedException( 'Pridávať komentáre môžu iba regirovaní užívatelia.' );
+			$presenter->flashMessage( 'front.forms.comment-form.error1', 'error' );
+			throw new App\Exceptions\AccessDeniedException( 'front.forms.comment-form.error1' );
 		}
 
 		if ( $values->name )  // Probably robot insertion
@@ -76,12 +88,12 @@ class CommentFormFactory
 		try
 		{
 			$this->commentsArticlesService->insertComment( $article->id, $values );
-			$presenter->flashMessage( 'Ďakujeme za komentár', 'success' );
+			$presenter->flashMessage( 'front.forms.comment-form.success', 'success' );
 		}
 		catch ( \Exception $e )
 		{
 			Debugger::log( $e->getMessage() . ' @ in file ' . __FILE__ . ' on line ' . __LINE__, 'error' );
-			$form->addError( 'Došlo k chybe. Váš komentár sa nepodarilo odoslať. Skúste to prosím neskôr.' );
+			$form->addError( $this->translator->translate( 'front.forms.comment-form.error2' ) );
 			return;
 		}
 

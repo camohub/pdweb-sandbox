@@ -6,6 +6,8 @@ namespace App\Presenters;
 
 use App;
 use Nette;
+use Kdyby;
+use WebLoader;
 use NasExt;
 use WebLoader\Nette\CssLoader;
 use WebLoader\Nette\JavaScriptLoader;
@@ -13,17 +15,22 @@ use WebLoader\Nette\JavaScriptLoader;
 
 abstract class BasePresenter extends Nette\Application\UI\Presenter
 {
+	/** @persistent */
+	public $locale;
 
-	/** @var \App\FrontModule\Components\ICamoMenuControlFactory @inject */
+	/** @var \Kdyby\Translation\Translator @inject */
+	public $translator;
+
+	/** @var App\FrontModule\Components\ICamoMenuControlFactory @inject */
 	public $camoMenuFactory;
 
-	/** @var \App\FrontModule\Components\Menu\IFrontMenuControlFactory @inject */
+	/** @var App\FrontModule\Components\Menu\IFrontMenuControlFactory @inject */
 	public $frontMenuFactory;
 
-	/** @var \App\AdminModule\Components\Menu\IAdminMenuControlFactory @inject */
+	/** @var App\AdminModule\Components\Menu\IAdminMenuControlFactory @inject */
 	public $adminMenuFactory;
 
-	/** @var \WebLoader\Nette\LoaderFactory @inject */
+	/** @var WebLoader\Nette\LoaderFactory @inject */
 	public $webLoader;
 
 
@@ -115,11 +122,26 @@ abstract class BasePresenter extends Nette\Application\UI\Presenter
 		return $control;
 	}
 
+
+	/**
+	 * @param null $title
+	 * @param null $desc
+	 * @param null $keywords
+	 * @param null $robots ( ie. 'noindex, nofollow')
+	 */
+	protected function setHeaderTags( $title = NULL, $desc = NULL, $keywords = NULL, $robots = NULL )
+	{
+		if( $title ) $this->template->title = $title;
+		if( $desc ) $this->template->meta_desc = $desc;
+		if( $keywords ) $this->template->meta_keywords = $keywords;
+		if( $robots ) $this->template->meta_robots = $robots;
+	}
+
 //// HELPERS //////////////////////////////////////////////////////////////////////////////
 
 
 
-/////////helpers//////////////////////////////////////////////////////
+/////////helpers///////////////////////////////////////////////////////////////////////////
 
 	/**
 	 * @desc Helpers

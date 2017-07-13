@@ -14,8 +14,8 @@
 		<ul>
 			{foreach $category as $item}
 				<li id="{$item->id}">
-					{if $item->url_params}
-						<a href="{plink $item->url (expand)explode(' ', $item->url_params)}">{$item->name}</a>
+					{if $item->slug}
+						<a href="{plink $item->url $item->slug}">{$item->name}</a>
 					{else}
 						<a href="{plink $item->url}">{$item->name}</a>
 					{/if}

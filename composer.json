@@ -39,7 +39,8 @@
 		"robmorgan/phinx": "^0.8.0",
 		"ublaboo/datagrid": "^5.4",
 		"o5/grido": "dev-master",
-		"nasext/visual-paginator": "^3.0"
+		"nasext/visual-paginator": "^3.0",
+		"kdyby/translation": "^2.4"
 	},
 	"require-dev": {
 		"nette/tester": "^1.6"

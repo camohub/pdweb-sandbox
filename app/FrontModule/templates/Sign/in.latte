@@ -2,25 +2,25 @@
 {block content}
 
 <div class="row xs-mar-top-100 xs-mar-bot-30">
-	<h1 n:block="title" class="col-sm-6 col-lg-4 col-sm-offset-3 col-lg-offset-4">Sign In</h1>
+	<h1 n:block="title" class="col-sm-6 col-lg-4 col-sm-offset-3 col-lg-offset-4">{_sign.in.h1}</h1>
 </div>
 
-{form signForm class => "col-sm-6 col-lg-4 col-sm-offset-3 col-lg-offset-4 form-horizontal"}
+{form signForm class => "col-sm-6 col-lg-4 col-sm-offset-3 col-lg-offset-4"}
 	<div class="form-group">
-		{label user_name class => 'col-xs-12'}{/label}
-		<div class="col-xs-12">{input user_name}</div>
+		{label user_name}{/label}
+		{input user_name}
 	</div>
 	<div class="form-group">
-		{label password class => 'col-xs-12'}{/label}
-		<div class="col-xs-12">{input password}</div>
+		{label password}{/label}
+		{input password}
 	</div>
-	<div class="form-group">
-		<div class="col-xs-12">{input submit}</div>
+	<div class="form-group xs-mar-ver-15a">
+		{input submit}
 	</div>
 {/form}
 
 <div class="row">
 	<div class="col-sm-6 col-lg-4 col-sm-offset-3 col-lg-offset-4">
-		<a n:href="up">Don't have an account yet? Sign up.</a>
+		<a n:href="up">{_sign.in.register}</a>
 	</div>
 </div>

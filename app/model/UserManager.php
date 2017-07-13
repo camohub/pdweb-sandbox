@@ -51,7 +51,7 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 
 		if ( ! $user_row )
 		{
-			throw new Nette\Security\AuthenticationException( 'The username is incorrect.', self::IDENTITY_NOT_FOUND );
+			throw new Nette\Security\AuthenticationException( 'front.forms.sign.in.not-found', self::IDENTITY_NOT_FOUND );
 		}
 		elseif ( ! $user_row->active )
 		{
@@ -59,7 +59,7 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 		}
 		elseif ( ! Passwords::verify( $password, $user_row->password ) )
 		{
-			throw new Nette\Security\AuthenticationException( 'The password is incorrect.', self::INVALID_CREDENTIAL );
+			throw new Nette\Security\AuthenticationException( 'front.forms.sign.in.invalid-credentials', self::INVALID_CREDENTIAL );
 		}
 		elseif ( Passwords::needsRehash( $user_row->password ) )
 		{

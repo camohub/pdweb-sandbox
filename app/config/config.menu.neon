@@ -8,22 +8,21 @@ menu:
 	front:
 		controlClass: App\FrontModule\Components\Menu\FrontMenuControl
 		controlInterface: App\FrontModule\Components\Menu\IFrontMenuControlFactory
+		translator: true
 
 		items:
-			Technology: :Front:Default:default#technology
-
 			Login:
-				title: Login
+				title: front.topmenu.login
 				target: :Front:Sign:in
 				allow:
 					loggedIn: false
 			Logout:
-				title: Logout
+				title: front.topmenu.logout
 				target: :Front:Sign:out
 				allow:
 					loggedIn: true
 			Admin:
-				title: Admin
+				title: front.topmenu.admin
 				target: :Admin:Default:default
 				allow:
 					loggedIn: true

@@ -56,14 +56,16 @@ class ArticlesPresenter extends \App\Presenters\BasePresenter
 
 			$this->template->articles = $this->setPaginator( $articles );
 			$this->setCategoryId( $category->id );
+			$this->flashMessage( 'front.articles.show.flash1' );
 		}
 		else // No category was found so try to find article.
 		{
 			// Do not call setCategoryId() because if there is a link to another article from other category,
 			// it will highlight wrong category for that article.
-			if ( ! $article = $this->articlesRepository->findOneBy( [ 'slug' => $title ] ) )
+			$article = $this->articlesRepository->findOneBy( [ ':articles_langs.slug' => $title ] );
+			if ( ! $article )
 			{
-				throw new Nette\Application\BadRequestException( 'Požadovanú stránku sa nepodarilo nájsť.', 404 );
+				throw new Nette\Application\BadRequestException( $this->translator->translate( 'front.articles.show.not-found' ), 404 );
 			}
 
 			$this->template->article = $article;

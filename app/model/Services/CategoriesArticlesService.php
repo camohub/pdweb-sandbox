@@ -4,6 +4,7 @@ namespace App\Model\Services;
 
 use App;
 use App\Model\Repositories\ArticlesRepository;
+use Kdyby\Translation\Translator;
 use Nette;
 use Nette\Utils\Strings;
 use App\Model\Repositories\CategoriesArticlesRepository;
@@ -21,7 +22,10 @@ class CategoriesArticlesService
 	protected $articlesCategoriesArticlesRepository;
 
 	/** @var ArticlesRepository */
-	protected $articlesRepository;
+	protected $articlesLangsRepository;
+
+	/** @var Translator */
+	protected $translator;
 
 
 	/**
@@ -29,11 +33,12 @@ class CategoriesArticlesService
 	 * @param ArticlesCategoriesArticlesRepository $aCAR
 	 * @param ArticlesRepository $aR
 	 */
-	public function __construct( CategoriesArticlesRepository $cAR, ArticlesCategoriesArticlesRepository $aCAR, ArticlesRepository $aR )
+	public function __construct( CategoriesArticlesRepository $cAR, ArticlesCategoriesArticlesRepository $aCAR, ArticlesRepository $aR, Translator $tr )
 	{
 		$this->categoriesArticlesRepository = $cAR;
 		$this->articlesCategoriesArticlesRepository = $aCAR;
 		$this->articlesRepository = $aR;
+		$this->translator = $tr;
 	}
 
 
@@ -83,7 +88,9 @@ class CategoriesArticlesService
 		$cat_ids = $this->findCategoryTreeIds( $id );
 		$art_ids = $this->articlesCategoriesArticlesRepository->findBy( ['categories_articles_id' => $cat_ids] )->fetchPairs( NULL, 'articles_id' );
 
-		$articles = $this->articlesRepository->findBy( ['id' => $art_ids] )->order( 'id DESC' );
+		$articles = $this->articlesRepository
+			->findBy( ['articles.id' => $art_ids, ':articles_langs.langs_code' => $this->translator->getLocale()] )
+			->order( 'articles.id DESC' );
 
 		return $articles;
 	}

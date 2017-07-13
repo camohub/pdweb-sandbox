@@ -23,30 +23,33 @@ class RouterFactory
 
 		$router[] = $frontRouter = new RouteList('Front');
 
-		$frontRouter[] = new Route( '[<presenter articles>/]<title>[/<action>/<vp-page \d+>]',
+		$frontRouter[] = new Route( '[<locale sk|en>/][<presenter articles>/]<title>[/<action>/<vp-page \d+>]',
 			[
+				'locale' => [
+					Route::VALUE => 'sk',
+				],
 				'presenter' => [
-					Route::VALUE        => 'Articles',
+					Route::VALUE => 'Articles',
 					Route::FILTER_TABLE => [
 						'clanky' => 'Articles',
 					],
 				],
-				'action'    => [
-					Route::VALUE        => 'show',
+				'action' => [
+					Route::VALUE => 'show',
 					Route::FILTER_TABLE => [
 						'strana' => 'show',
 					],
 				],
-				'title'     => [
+				'title' => [
 					Route::VALUE => 'najnovsie-clanky',
 				],
-				'vp-page'   => [
+				'vp-page' => [
 					Route::VALUE => '1',
 				],
 			]
 		);
 
-		$router[] = new Route( '<presenter>/<action>[/<id>]' );
+		$frontRouter[] = new Route( '[<locale=sk sk|en>/]<presenter>/<action>[/<id>]' );
 
 		return $router;
 	}

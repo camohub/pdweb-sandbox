@@ -41,11 +41,6 @@ class ArticlesTableCreate extends AbstractMigration
 			CREATE TABLE `articles` (
 				`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
 				`acl_users_id` int(11) UNSIGNED DEFAULT NULL,
-				`meta_desc` varchar(255) COLLATE utf8_slovak_ci NOT NULL,
-				`title` varchar(255) COLLATE utf8_slovak_ci NOT NULL,
-				`slug` varchar(255) COLLATE utf8_slovak_ci NOT NULL,
-				`perex` longtext COLLATE utf8_slovak_ci NOT NULL,
-				`content` longtext COLLATE utf8_slovak_ci NOT NULL,
 				`articles_statuses_id` int(11) UNSIGNED NOT NULL,
 				`created` datetime NOT NULL
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_slovak_ci
@@ -53,10 +48,32 @@ class ArticlesTableCreate extends AbstractMigration
 
 		$this->query('
 			ALTER TABLE `articles`
-				ADD KEY `articles_slug_idx` (`slug`),
 				ADD KEY `articles_created_idx` (`created`),
 				ADD KEY `articles_acl_users_id_idx` (`acl_users_id`),
 				ADD KEY `articles_articles_statuses_id_idx` (`articles_statuses_id`)
+		');
+
+		/////////////////////////////////////////////////////////////////////////////////
+		///// ARTICLES_LANGS TABLE /////////////////////////////////////////////////////
+		///////////////////////////////////////////////////////////////////////////////
+		$this->query('
+			CREATE TABLE `articles_langs` (
+				`id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`articles_id` int(11) UNSIGNED NOT NULL,
+				`langs_code` varchar(10) NULL, 
+				`meta_desc` varchar(255) COLLATE utf8_slovak_ci NOT NULL,
+				`title` varchar(255) COLLATE utf8_slovak_ci NOT NULL,
+				`slug` varchar(255) COLLATE utf8_slovak_ci NOT NULL,
+				`perex` longtext COLLATE utf8_slovak_ci NOT NULL,
+				`content` longtext COLLATE utf8_slovak_ci NOT NULL
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_slovak_ci
+		');
+
+		$this->query('
+			ALTER TABLE `articles_langs` 
+				ADD KEY `articles_langs_slug_idx` (`slug`),
+				ADD KEY `articles_langs_langs_code_idx` (`langs_code`),
+				ADD KEY `articles_langs_articles_id_idx` (`articles_id`)
 		');
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -111,6 +128,16 @@ class ArticlesTableCreate extends AbstractMigration
 		$this->query('
 			ALTER TABLE `articles` 
 				ADD CONSTRAINT `articles_articles_statuses_id_fk` FOREIGN KEY (`articles_statuses_id`) REFERENCES `articles_statuses` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+		');
+
+		$this->query('
+			ALTER TABLE `articles_langs`
+				ADD CONSTRAINT `articles_langs_articles_id_fk` FOREIGN KEY (`articles_id`) REFERENCES `articles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+		');
+
+		$this->query('
+			ALTER TABLE `articles_langs`
+				ADD CONSTRAINT `articles_langs_langs_code_fk` FOREIGN KEY (`langs_code`) REFERENCES `langs` (`code`) ON DELETE SET NULL ON UPDATE CASCADE
 		');
 
 		$this->query('

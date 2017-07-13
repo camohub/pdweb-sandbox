@@ -33,7 +33,7 @@ class SignPresenter extends BasePresenter
 	public function actionOut()
 	{
 		$this->getUser()->logout( true );
-		$this->flashMessage( 'Boli ste odhlásený.' );
+		$this->flashMessage( 'front.sign.out.flash' );
 
 		$this->redirect( ':Front:Default:default' );
 	}
@@ -65,16 +65,16 @@ class SignPresenter extends BasePresenter
 		}
 		catch ( Nette\Security\AuthenticationException $e )
 		{
-			$form->addError( $e->getMessage() );
+			$form->addError( $this->translator->translate( $e->getMessage() ) );
 			return;
 		}
 		catch ( App\Exceptions\AccessDeniedException $e )
 		{
-			$this->flashMessage( 'Váš účet ešte nebol aktivovaný emailom, alebo je zablokovaný.' );
+			$this->flashMessage( 'front.forms.sign.in.access-denied' );
 			return;
 		}
 
-		$this->flashMessage( 'Vitajte ' . $values['user_name'] );
+		$this->flashMessage( 'front.forms.sign.in.success' );
 
 		if ( $url = $this->getReferer( 'signInReferrer' ) )
 		{
