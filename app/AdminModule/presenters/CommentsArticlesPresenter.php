@@ -1,9 +1,12 @@
 <?php
+
+
 namespace App\AdminModule\Presenters;
 
-use App\Model\Repositories\ArticlesRepository;
-use App\Model\Repositories\CommentsArticlesRepository;
+
 use App\Model\Services\CommentsArticlesService;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
 use Nette;
 use App;
 use Tracy\Debugger;
@@ -11,21 +14,31 @@ use Tracy\Debugger;
 class CommentsArticlesPresenter extends App\AdminModule\Presenters\BasePresenter
 {
 
-	/** @var  ArticlesRepository @inject */
-	public $articlesRepository;
+	/** @var  EntityManager @inject */
+	public $em;
+
+	/** @var  EntityRepository */
+	public $articleRepository;
+
+	/** @var  EntityRepository */
+	public $commentArticleRepository;
 
 	/** @var  CommentsArticlesService @inject */
 	public $commentsArticlesService;
 
-	/** @var  CommentsArticlesRepository @inject */
-	public $commentsArticlesRepository;
+
+	public function startup()
+	{
+		parent::startup();
+		$this->articleRepository = $this->em->getRepository( App\Model\Entity\Article::class );
+		$this->commentArticleRepository = $this->em->getRepository( App\Model\Entity\CommentArticle::class );
+	}
 
 
 	public function renderDefault( $id )
 	{
-		$this->template->article = $this->articlesRepository->findOneBy( ['id' => (int) $id] );
-		$this->template->comments = $this->commentsArticlesRepository->findBy( ['articles_id' => (int) $id] )->order( 'id DESC' );
-		$this->template->commentsArticlesRepository = $this->commentsArticlesRepository;
+		$this->template->article = $this->articleRepository->find( (int) $id );
+		$this->template->commentArticleRepository = $this->commentArticleRepository;
 	}
 
 
@@ -41,7 +54,7 @@ class CommentsArticlesPresenter extends App\AdminModule\Presenters\BasePresenter
 			throw new App\Exceptions\AccessDeniedException( 'Nemáte oprávnenie mazať komentáre.' );
 		}
 
-		$comment = $this->commentsArticlesRepository->findOneBy( ['id' => (int) $comment_id] );
+		$comment = $this->commentArticleRepository->findOneBy( ['id' => (int) $comment_id] );
 
 		if ( $comment->acl_users_id != $this->user->id || ! $this->user->isInRole( 'admin' ) )
 		{

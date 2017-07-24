@@ -6,22 +6,23 @@
 	var category_id = {$current_id};
 </script>
 
-{cache $categoriesArticlesRepository::CACHE, tags => [ $categoriesArticlesRepository::CACHE_TAG ]}
+{cache $categoriesArticlesService::CACHE . $lang_code, tags => [ $categoriesArticlesService::CACHE_TAG . $lang_code ]}
 
-<div id="categories-articles">
+<div id="categories-articles">{dump 'not cached result'}
 
 	{block menu}
 		<ul>
 			{foreach $category as $item}
-				<li id="{$item->id}">
-					{if $item->slug}
-						<a href="{plink $item->url $item->slug}">{$item->name}</a>
+				<li n:if="$item->getStatus()->getId() === \App\Model\Entity\Status::STATUS_PUBLISHED" id="{$item->getId()}">
+					{var $item_lang = $item->getLang( $lang_code )}
+					{if $item_lang->getSlug()}
+						<a href="{plink $item->getUrl() $item_lang->getSlug()}">{$item_lang->getTitle()}</a>
 					{else}
-						<a href="{plink $item->url}">{$item->name}</a>
+						<a href="{plink $item->getUrl()}">{$item_lang->getTitle()}</a>
 					{/if}
 
-					{if $category = $categoriesArticlesRepository->findBy( [ 'parent_id' => $item->id ] )->fetchAll() }
-						{include menu, category => $category } {* RECURSION *}
+					{if $category = $categoryArticleRepository->findBy( [ 'parent_id =' => $item->getId() ] ) }
+						{include menu, category => $category, lang_code => $lang_code } {* RECURSION *}
 					{/if}
 				</li>
 			{/foreach}

@@ -22,8 +22,8 @@ abstract class BasePresenter extends App\Presenters\BasePresenter
 	{
 		parent::startup();
 
-		$this->sessionCategoriesArticles = $this->getSession( 'categoriesArticles' );
-		$this->sessionCategoriesArticles = $this->getSession( 'categoriesProducts' );
+		$this->sessionCategoriesArticles = $this->getSession( 'categories_articles' );
+		$this->sessionCategoriesArticles = $this->getSession( 'categories_products' );
 	}
 
 }

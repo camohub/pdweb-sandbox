@@ -3,7 +3,12 @@
 namespace App\AdminModule\Components;
 
 
+use App\Model\Entity;
 use App\Model\Repositories\ArticlesRepository;
+use App\Model\Services\ArticlesService;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Translation\Translator;
+use Tracy\Debugger;
 use Ublaboo\DataGrid\DataGrid;
 use Nette;
 
@@ -11,16 +16,25 @@ use Nette;
 class ArticlesDataGridFactory
 {
 
-	/** ArticlesRepository */
+	/** @var EntityManager  */
+	protected $em;
+
+	/** ArticleService */
+	protected $articlesService;
+
+	/** ArticleRepository */
 	protected $articlesRepository;
 
-	/** Array */
-	protected $articlesStatuses;
+	/** Translator */
+	protected $translator;
 
 
-	public function __construct( ArticlesRepository $aR )
+	public function __construct( EntityManager $em, ArticlesService $aS, Translator $t )
 	{
-		$this->articlesRepository = $aR;
+		$this->em = $em;
+		$this->articlesService = $aS;
+		$this->articleRepository = $em->getRepository( Entity\Article::class );
+		$this->translator = $t;
 	}
 
 
@@ -28,24 +42,29 @@ class ArticlesDataGridFactory
 	{
 		$grid = new DataGrid();
 
-		$grid->setDataSource( $this->articlesRepository->findBy( ['articles_statuses_id' => [ArticlesRepository::STATUS_VIRTUAL, ArticlesRepository::STATUS_PUBLISHED, ArticlesRepository::STATUS_UNPUBLISHED]] )->order( 'id DESC' ) );
+		$grid->setDataSource( $this->articlesService->findByForDatagrid([
+			'status.id =' => [Entity\Status::STATUS_DRAFT, Entity\Status::STATUS_PUBLISHED, Entity\Status::STATUS_UNPUBLISHED],
+		]));
 
 		$grid->addColumnText( 'id', 'ID' );
 
-		$grid->addColumnText( 'title', 'Title' )
+		$grid->addColumnText( 'title', 'Title', 'langs.title' )
+			->setRenderer( function ( $article ) {
+				return $article->lang->getTitle();  // Calls $article->getDefaultLang( 'sk' )
+			})
 			->setSortable()
 			->setFilterText()
-			->setSplitWordsSearch(FALSE);
+			->setSplitWordsSearch( FALSE );
 
-		$grid->addColumnText( 'user_name', 'Author', 'acl_users.user_name' )  // https://ublaboo.org/datagrid/data-source
+		$grid->addColumnText( 'user_name', 'Author', 'user.user_name' )  // https://ublaboo.org/datagrid/data-source
 			->setSortable()
 			->setFilterText()
-			->setSplitWordsSearch(FALSE);
+			->setSplitWordsSearch( FALSE );
 
-		$grid->addColumnText( 'articles_statuses_id', 'Status' )
-			->setReplacement( [ArticlesRepository::STATUS_VIRTUAL => 'Draft', ArticlesRepository::STATUS_PUBLISHED => 'Publikovaný', ArticlesRepository::STATUS_UNPUBLISHED => 'Nepublikovaný'] )
+		$grid->addColumnText( 'statuses_id', 'Status', 'status.id' )
+			->setReplacement( [Entity\Status::STATUS_DRAFT => 'Draft', Entity\Status::STATUS_PUBLISHED => 'Publikovaný', Entity\Status::STATUS_UNPUBLISHED => 'Nepublikovaný'] )
 			->setSortable()
-			->setFilterMultiSelect( ['' => 'All items', ArticlesRepository::STATUS_VIRTUAL => 'Draft', ArticlesRepository::STATUS_PUBLISHED => 'Published', ArticlesRepository::STATUS_UNPUBLISHED => 'Unpublished'] );
+			->setFilterMultiSelect( ['' => 'All items', Entity\Status::STATUS_DRAFT => 'Draft', Entity\Status::STATUS_PUBLISHED => 'Published', Entity\Status::STATUS_UNPUBLISHED => 'Unpublished'] );
 
 		$grid->addColumnDateTime( 'created', 'Created' )->setFormat( 'd.m. Y H:i:s' )
 			->setSortable()
@@ -54,20 +73,20 @@ class ArticlesDataGridFactory
 		$grid->addAction( 'visibility!', '')
 			->setClass( function( $row )
 			{
-				if( $row->articles_statuses_id == ArticlesRepository::STATUS_PUBLISHED ) return 'grid-action color-5';
-				if( $row->articles_statuses_id == ArticlesRepository::STATUS_UNPUBLISHED ) return 'grid-action color-7';
+				if( $row->status->getId() == Entity\Status::STATUS_PUBLISHED ) return 'grid-action color-5';
+				if( $row->status->getId() == Entity\Status::STATUS_UNPUBLISHED ) return 'grid-action color-7';
 				return 'disp-none';
 			})
 			->setIcon( function( $row )
 			{
-				if( $row->articles_statuses_id == ArticlesRepository::STATUS_PUBLISHED ) return 'eye';
-				if( $row->articles_statuses_id == ArticlesRepository::STATUS_UNPUBLISHED ) return 'eye-slash';
+				if( $row->status->getId() == Entity\Status::STATUS_PUBLISHED ) return 'eye';
+				if( $row->status->getId() == Entity\Status::STATUS_UNPUBLISHED ) return 'eye-slash';
 				return '';
 			})
 			->setTitle( function ( $row )
 			{
-				if( $row->articles_statuses_id == ArticlesRepository::STATUS_PUBLISHED ) return 'Unpublish';
-				if( $row->articles_statuses_id == ArticlesRepository::STATUS_UNPUBLISHED ) return 'Publish';
+				if( $row->status->getId() == Entity\Status::STATUS_PUBLISHED ) return 'Unpublish';
+				if( $row->status->getId() == Entity\Status::STATUS_UNPUBLISHED ) return 'Publish';
 				return '';
 			});
 

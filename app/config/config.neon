@@ -22,6 +22,10 @@ includes:
 
 extensions:
 	translation: Kdyby\Translation\DI\TranslationExtension
+	console: Kdyby\Console\DI\ConsoleExtension
+	events: Kdyby\Events\DI\EventsExtension
+	annotations: Kdyby\Annotations\DI\AnnotationsExtension
+	doctrine: Kdyby\Doctrine\DI\OrmExtension
 
 
 translation:
@@ -35,20 +39,6 @@ services:
 	authorizatorFactory: App\Model\AuthorizatorFactory
 	authorizator: @authorizatorFactory::create
 	- App\Model\UserManager
-
-	#REPOSITORIES
-	- App\Model\Repositories\AclUsersRepository
-	- App\Model\Repositories\AclUsersRolesRepository
-	- App\Model\Repositories\ModulesRepository
-	- App\Model\Repositories\ArticlesRepository
-	- App\Model\Repositories\ArticlesLangsRepository
-	- App\Model\Repositories\CategoriesArticlesRepository
-	- App\Model\Repositories\ArticlesCategoriesArticlesRepository
-	- App\Model\Repositories\CommentsArticlesRepository
-	- App\Model\Repositories\CategoriesProductsRepository
-	- App\Model\Repositories\ProductsCategoriesProductsRepository
-	- App\Model\Repositories\UploadsArticlesRepository
-	- App\Model\Repositories\UploadsProductsRepository
 
 	#SERVICES
 	- App\Model\Services\ArticlesService
@@ -69,6 +59,5 @@ services:
 	#COMPONENTS
 	- App\FrontModule\Components\ICamoMenuControlFactory
 	- App\AdminModule\Components\ArticlesDataGridFactory
-	- App\AdminModule\Components\ArticlesDataGrid5Factory
 
 

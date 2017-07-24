@@ -4,6 +4,8 @@ namespace App\AdminModule\Forms;
 
 
 use App;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
 use Nette;
 use App\Model\Repositories\CategoriesArticlesRepository;
 use App\Model\Repositories\ArticlesCategoriesArticlesRepository;
@@ -15,21 +17,21 @@ use Tracy\Debugger;
 class ArticlesCategoryEditFormFactory
 {
 
+	/** @var  EntityManager */
+	protected $em;
+
 	/** @var  CategoriesArticlesService */
 	protected $categoriesArticlesService;
 
-	/** @var  CategoriesArticlesRepository */
-	protected $categoriesArticlesRepository;
-
-	/** @var  ArticlesCategoriesArticlesRepository */
-	protected $articlesCategoriesArticlesRepository;
+	/** @var  EntityRepository */
+	protected $categoryArticleRepository;
 
 
-	public function __construct( CategoriesArticlesService $cAS, CategoriesArticlesRepository $cAR, ArticlesCategoriesArticlesRepository $aCAR )
+	public function __construct( EntityManager $em, CategoriesArticlesService $cAS )
 	{
+		$this->em = $em;
 		$this->categoriesArticlesService = $cAS;
-		$this->categoriesArticlesRepository = $cAR;
-		$this->articlesCategoriesArticlesRepository = $aCAR;
+		$this->categoryArticleRepository = $em->getRepository( App\Model\Entity\CategoryArticle::class );
 	}
 
 
@@ -38,10 +40,18 @@ class ArticlesCategoryEditFormFactory
 		$form = new Nette\Application\UI\Form();
 		//$form->elementPrototype->addAttributes( array( 'class' => 'ajax' ) );
 
-		$form->addProtection( 'Vypršal čas vyhradený pre odoslanie formulára. Z dôvodu rizika útoku CSRF bola požiadavka na server zamietnutá.' );
+		$form->addProtection( 'Vypršal čas vyhradený pre odoslanie formulára. Požiadavka bola z bezpečnostných dôvodov zamietnutá.' );
 
-		$form->addText( 'name', 'Zmeňte názov' )
-			->setRequired( 'Názov musí byť vyplnené.' );
+		$names = $form->addContainer( 'titles' );
+
+		$category = $this->categoryArticleRepository->find( $id );
+		foreach ( $category->getLangs() as $lang )
+		{
+			$names->addText( $lang->getCode(), $lang->getCode() )
+				->setRequired( 'Názov je povinné pole.' )
+				->setAttribute( 'class', 'form-control' )
+				->setDefaultValue( $lang->getTitle() );
+		}
 
 		$form->addHidden( 'id', $id );
 
@@ -64,16 +74,16 @@ class ArticlesCategoryEditFormFactory
 			$presenter->redrawControl( 'sortableListScript' );
 			$presenter->redrawControl( 'flash' );
 			// If need rewrite ONE dynamic snippet, template needs to get ONLY THIS ONE. Render method in presenter sets this value.
-			$presenter->articlesCategories = $this->categoriesArticlesRepository->findBy( ['id' => $values['id']] );
+			$presenter->articlesCategories = $this->categoryArticleRepository->findBy( ['id =' => $values['id']] );
 		}
 
 		try
 		{
-			$this->categoriesArticlesService->updateName( $values['id'], $values['name'] );
+			$this->categoriesArticlesService->updateTitle( $values['id'], $values['titles'] );
 		}
 		catch ( App\Exceptions\DuplicateEntryException $e )
 		{
-			$presenter->flashMessage( 'Kategória s názvom ' . $values['name'] . ' už existuje. Musíte vybrať iný názov.', 'error' );
+			$presenter->flashMessage( 'Kategória s vybraným názvom už existuje. Názov musí byť unikátny pre každý jazyk.', 'error' );
 			return $form;
 		}
 		catch ( \Exception $e )

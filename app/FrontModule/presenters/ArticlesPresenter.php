@@ -1,35 +1,39 @@
 <?php
+
+
 namespace App\FrontModule\Presenters;
 
-use    Nette;
-use    App;
-use    App\Model;
-use    Tracy\Debugger;
+
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
+use Kdyby\Doctrine\RepositoryFactory;
+use Nette;
+use App;
+use Tracy\Debugger;
 
 
 class ArticlesPresenter extends \App\Presenters\BasePresenter
 {
 
+	/** @var EntityManager @inject */
+	public $em;
 
-	/** @var Nette\Caching\IStorage @inject */
-	public $storage;
+	/** @var  EntityRepository */
+	public $categoryArticleRepository;
+
+	/** @var EntityRepository */
+	public $articleRepository;
 
 	/** @var  App\Model\Services\CategoriesArticlesService @inject */
 	public $categoriesArticlesService;
 
-	/** @var  App\Model\Repositories\CategoriesArticlesRepository @inject */
-	public $categoriesArticlesRepository;
-
-	/** @var  App\Model\Repositories\ArticlesRepository @inject */
-	public $articlesRepository;
-
-	/** @var  App\Model\Repositories\CommentsArticlesRepository @inject */
-	public $commentsArticlesRepository;
-
 	/** @var  App\FrontModule\Forms\CommentFormFactory @inject */
 	public $commentFormFactory;
 
-	/** @var  Nette\Database\IRow */
+	/** @var Nette\Caching\IStorage @inject */
+	public $storage;
+
+	/** @var  App\Model\Entity\Article */
 	protected $article;
 
 
@@ -37,6 +41,8 @@ class ArticlesPresenter extends \App\Presenters\BasePresenter
 	{
 		parent::startup();
 
+		$this->articleRepository = $this->em->getRepository( App\Model\Entity\Article::class );
+		$this->categoryArticleRepository = $this->em->getRepository( App\Model\Entity\CategoryArticle::class );
 
 	}
 
@@ -50,28 +56,26 @@ class ArticlesPresenter extends \App\Presenters\BasePresenter
 	 */
 	public function renderShow( $title )
 	{
-		if ( $category = $this->categoriesArticlesRepository->findOneBy( [ 'slug' => $title ] ) )  // Displays category.
+		if ( $category = $this->categoryArticleRepository->findOneBy( [ 'langs.slug' => $title ] ) )  // Displays category.
 		{
-			$articles = $this->categoriesArticlesService->findCategoryArticles( $category->id );
+			$articles = $this->categoriesArticlesService->findCategoryArticles( $category );
 
 			$this->template->articles = $this->setPaginator( $articles );
-			$this->setCategoryId( $category->id );
-			$this->flashMessage( 'front.articles.show.flash1' );
+			$this->template->lang_code = $this->translator->getLocale();
+			$this->setCategoryId( $category->getId() );
 		}
 		else // No category was found so try to find article.
 		{
 			// Do not call setCategoryId() because if there is a link to another article from other category,
 			// it will highlight wrong category for that article.
-			$article = $this->articlesRepository->findOneBy( [ ':articles_langs.slug' => $title ] );
+			$article = $this->articleRepository->findOneBy( [ 'langs.slug' => $title ] );
 			if ( ! $article )
 			{
 				throw new Nette\Application\BadRequestException( $this->translator->translate( 'front.articles.show.not-found' ), 404 );
 			}
 
 			$this->template->article = $article;
-			$this->template->comments = $this->commentsArticlesRepository->findBy( ['articles_id' => $article->id] )->order( 'id ASC' );
-			$this->template->commentsArticlesRepository = $this->commentsArticlesRepository;
-
+			$this->template->lang_code = $this->translator->getLocale();
 		}
 
 	}
@@ -83,14 +87,13 @@ class ArticlesPresenter extends \App\Presenters\BasePresenter
 	{
 		$vp = $this['vp'];
 		$paginator = $vp->getPaginator();
-		$paginator->itemsPerPage = 2;
+		$paginator->itemsPerPage = 5;
 
-		$paginator->itemCount = $articles->count( '*' );
+		//$paginator->itemCount = $articles->count( '*' );
+		$articles->applyPaginator( $paginator );
 
-		$this->template->articles = $articles->limit( $paginator->itemsPerPage, $paginator->offset );
-
+		//$this->template->articles = $articles->limit( $paginator->itemsPerPage, $paginator->offset );
 		return $articles;
-
 	}
 
 

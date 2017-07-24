@@ -5,18 +5,19 @@ namespace App\AdminModule\Presenters;
 
 
 use App;
+use Kdyby\Doctrine\EntityRepository;
 use Nette;
 use App\AdminModule\Forms\ArticlesCategoryEditFormFactory;
 use App\AdminModule\Forms\ArticlesCategoryFormFactory;
-use App\Model\Repositories\CategoriesArticlesRepository;
+use App\Model\Repositories\CategoryArticleRepository;
 use Tracy\Debugger;
 
 
 class CategoriesPresenter extends App\AdminModule\Presenters\BasePresenter
 {
 
-	/** @var  CategoriesArticlesRepository @inject */
-	public $categoriesArticlesRepository;
+	/** @var  EntityRepository */
+	public $categoryArticleRepository;
 
 	/** @var  App\Model\Services\CategoriesArticlesService @inject */
 	public $categoriesArticlesService;
@@ -33,18 +34,19 @@ class CategoriesPresenter extends App\AdminModule\Presenters\BasePresenter
 
 	public function startup()
 	{
-		parent::startup();
-
-		if ( ! $this->user->isAllowed( 'menu', 'edit' ) )
+		if ( ! $this->user->isAllowed( 'category', 'edit' ) )
 		{
 			throw new App\Exceptions\AccessDeniedException( 'Nemáte oprávnenie editovať kategórie.' );
 		}
+
+		parent::startup();
+		$this->categoryArticleRepository = $this->categoriesArticlesService->categoryArticleRepository;
 	}
 
 
 	public function actionArticlesCategories( $id = NULL )
 	{
-		$this->articlesCategories = $this->categoriesArticlesRepository->findBy( ['parent_id' => NULL] )->order( 'priority ASC' );
+		$this->articlesCategories = $this->categoryArticleRepository->findBy( ['parent_id' => NULL], ['priority' => 'ASC'] );
 	}
 
 
@@ -52,7 +54,7 @@ class CategoriesPresenter extends App\AdminModule\Presenters\BasePresenter
 	{
 		// $categories can be changed by some handlers, actions or forms e.g. articlesCategoryEditForm.
 		$this->template->categories = $this->articlesCategories;
-		$this->template->categoriesArticlesRepository = $this->categoriesArticlesRepository;
+		$this->template->categoryArticleRepository = $this->categoryArticleRepository;
 	}
 
 
@@ -84,23 +86,18 @@ class CategoriesPresenter extends App\AdminModule\Presenters\BasePresenter
 
 
 	/**
-	 * @param $id integer
-	 * @secured
+	 * @param $id
+	 * @throws App\Exceptions\AccessDeniedException
 	 */
 	public function handleChangeArticlesCategoryVisibility( $id )
 	{
-		if ( $this->isAjax() )
-		{
-			$this->redrawControl( 'sortableList' );
-			$this->redrawControl( 'sortableListScript' );
-			$this->redrawControl( 'flash' );
-		}
+		$category = $this->categoryArticleRepository->find( $id );
 
 		try
 		{
-			$this->categoriesArticlesService->switchVisibility( $id );
+			$this->categoriesArticlesService->switchVisibility( $category );
 			// Dynamic snippet redraw needs to set only one item to template.
-			$this->articlesCategories = $this->categoriesArticlesRepository->findBy( ['id' => $id] );
+			$this->articlesCategories = $this->categoryArticleRepository->findBy( ['id' => $id] );
 			$this->flashMessage( 'Viditeľnosť položky bola upravená.', 'success' );
 		}
 		catch ( \Exception $e )
@@ -111,6 +108,9 @@ class CategoriesPresenter extends App\AdminModule\Presenters\BasePresenter
 
 		if( $this->isAjax() )
 		{
+			$this->redrawControl( 'sortableList' );
+			$this->redrawControl( 'sortableListScript' );
+			$this->redrawControl( 'flash' );
 			return;
 		}
 
@@ -121,21 +121,17 @@ class CategoriesPresenter extends App\AdminModule\Presenters\BasePresenter
 
 	/**
 	 * @param $id
-	 * @secured
+	 * @throws App\Exceptions\AccessDeniedException
 	 */
 	public function handleDeleteArticleCategory( $id )
 	{
-		if ( $this->isAjax() )  // Not used for now.
-		{
-			$this->redrawControl( 'sortableList' );
-			$this->redrawControl( 'flash' );
-		}
+		$category = $this->categoryArticleRepository->find( $id );
 
 		try
 		{
-			$names = $result = $this->categoriesArticlesService->delete( $id );
-			$this->articlesCategories = $this->categoriesArticlesRepository->findBy( ['parent_id' => NULL] )->order( 'priority ASC' );
-			$this->flashMessage( 'Item(s) ' . join( ', ', $names ) . ' has(ve) been deleted.' );
+			$names = $result = $this->categoriesArticlesService->delete( $category );
+			$this->articlesCategories = $this->categoryArticleRepository->findBy( ['parent_id' => NULL], ['priority' => 'ASC'] );
+			$this->flashMessage( 'Category ' . join( ', ', $names ) . ' have been deleted.' );
 		}
 		catch ( App\Model\Services\NoArticleException $e )
 		{
@@ -158,8 +154,10 @@ class CategoriesPresenter extends App\AdminModule\Presenters\BasePresenter
 			return;
 		}
 
-		if ( $this->isAjax() )
+		if ( $this->isAjax() )  // Not used for now.
 		{
+			$this->redrawControl( 'sortableList' );
+			$this->redrawControl( 'flash' );
 			return;
 		}
 

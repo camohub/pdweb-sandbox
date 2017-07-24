@@ -2,7 +2,12 @@
 
 namespace App\FrontModule\Components;
 
-use App\Model\Repositories\CategoriesArticlesRepository;
+
+use App\Model\Entity\CategoryArticle;
+use App\Model\Services\CategoriesArticlesService;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
+use Kdyby\Translation\Translator;
 use	Nette\Application\UI\Control;
 use Nette\Caching\Cache;
 use	Tracy\Debugger;
@@ -11,11 +16,20 @@ use	Tracy\Debugger;
 class CamoMenu extends Control
 {
 
-	/** @var CategoriesArticlesRepository */
-	protected $categoriesArticlesRepository;
+	/** @var EntityManager */
+	protected $em;
+
+	/** @var EntityRepository */
+	protected $categoryArticleRepository;
+
+	/** @var CategoriesArticlesService */
+	protected $categoriesArticlesService;
 
 	/** @var  Cache */
 	protected $cache;
+
+	/** @var  Translator */
+	protected $translator;
 
 	/**
 	 * @desc Is id of current category.
@@ -36,11 +50,14 @@ class CamoMenu extends Control
 	public $only_category = NULL;
 
 
-	public function __construct( CategoriesArticlesRepository $cAR/*, Cache $cache*/ )
+	public function __construct( EntityManager $em, CategoriesArticlesService $cAS, Translator $t/*, Cache $cache*/ )
 	{
 		parent::__construct();
 
-		$this->categoriesArticlesRepository = $cAR;
+		$this->em = $em;
+		$this->categoryArticleRepository = $em->getRepository( CategoryArticle::class );
+		$this->categoriesArticlesService = $cAS;
+		$this->translator = $t;
 		//$this->cache = $cache;
 
 	}
@@ -54,10 +71,12 @@ class CamoMenu extends Control
 		$template = $this->template;
 		$template->setFile( __DIR__ . '/menu.latte' );
 
-		$template->category = $this->categoriesArticlesRepository->findBy( [ 'parent_id' => $this->only_category ] )->order( 'priority ASC' );
+		$template->category = $this->categoryArticleRepository->findBy( [ 'parent_id' => $this->only_category ], ['priority' => 'ASC'] );
 
 		$template->current_id = $this->current_id;
-		$template->categoriesArticlesRepository = $this->categoriesArticlesRepository;
+		$template->lang_code = $this->translator->getLocale();
+		$template->categoryArticleRepository = $this->categoryArticleRepository;
+		$template->categoriesArticlesService = $this->categoriesArticlesService;
 
 		$template->render();
 	}

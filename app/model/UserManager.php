@@ -4,12 +4,14 @@
 namespace App\Model;
 
 
+use Kdyby\Doctrine\EntityManager;
 use Nette;
 use App;
 use Nette\Security\Passwords;
 use App\Model\Repositories\AclUsersRepository;
 use App\Model\Repositories\AclUsersRolesRepository;
 use Nette\Utils\Random;
+use Tracy\Debugger;
 
 
 /**
@@ -19,21 +21,21 @@ use Nette\Utils\Random;
 class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 {
 
-	/** @var Nette\Database\Context */
-	private $database;
+	/** @var EntityManager */
+	private $em;
 
 	/** @var AclUsersRepository */
-	private $aclUsersRepository;
+	private $userRepository;
 
 	/** @var AclUsersRolesRepository */
-	private $aclUsersRolesRepository;
+	private $roleRepository;
 
 
-	public function __construct( Nette\Database\Context $database, AclUsersRepository $uR, AclUsersRolesRepository $uRR )
+	public function __construct( EntityManager $em )
 	{
-		$this->database = $database;
-		$this->aclUsersRepository = $uR;
-		$this->aclUsersRolesRepository = $uRR;
+		$this->em = $em;
+		$this->userRepository = $em->getRepository( App\Model\Entity\User::class );
+		$this->roleRepository = $em->getRepository( App\Model\Entity\Role::class );
 	}
 
 
@@ -47,35 +49,36 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 	{
 		list( $user_name, $password ) = $credentials;
 
-		$user_row = $this->aclUsersRepository->findOneBy( [ AclUsersRepository::COL_NAME => $user_name, AclUsersRepository::COL_PASSWORD . ' NOT' => NULL ] );
+		$user = $this->userRepository->findOneBy( [ 'user_name =' => $user_name, 'password !=' => NULL ] );
 
-		if ( ! $user_row )
+		if ( ! $user )
 		{
 			throw new Nette\Security\AuthenticationException( 'front.forms.sign.in.not-found', self::IDENTITY_NOT_FOUND );
 		}
-		elseif ( ! $user_row->active )
+		elseif ( ! $user->getActive() )
 		{
 			throw new App\Exceptions\AccessDeniedException;
 		}
-		elseif ( ! Passwords::verify( $password, $user_row->password ) )
+		elseif ( ! Passwords::verify( $password, $user->getPassword() ) )
 		{
 			throw new Nette\Security\AuthenticationException( 'front.forms.sign.in.invalid-credentials', self::INVALID_CREDENTIAL );
 		}
-		elseif ( Passwords::needsRehash( $user_row->password ) )
+		elseif ( Passwords::needsRehash( $user->getPassword() ) )
 		{
-			$user_row->update( ['password' => Passwords::hash( $password )] );
+			$user->update( ['password' => Passwords::hash( $password )] );
 		}
 
-		$userArr = $user_row->toArray();
-		unset( $userArr[AclUsersRepository::COL_PASSWORD] );
+		$userArr = $user->getArray();
 
-		$rolesArr = array();
-		foreach( $user_row->related('acl_users_roles', 'acl_users_id') as $role )
+		$rolesArr = [];
+		Debugger::barDump( $user->getRoles() );
+		foreach ( $user->getRoles() as $role )
 		{
-			$rolesArr[] = $role->ref('acl_roles', 'acl_roles_id')->name;
+			Debugger::barDump( $role );
+			$rolesArr[] = $role->getName();
 		}
 
-		return new Nette\Security\Identity( $user_row->id, $rolesArr, $userArr );
+		return new Nette\Security\Identity( $user->getId(), $rolesArr, $userArr );
 	}
 
 
@@ -107,7 +110,7 @@ class UserManager extends Nette\Object implements Nette\Security\IAuthenticator
 		$code = Random::generate( 10,'0-9a-zA-Z' );
 		try
 		{
-			$row = $this->aclUsersRepository->insert([
+			$row = $this->userRepository->insert([
 				AclUsersRepository::COL_NAME => $params['user_name'],
 				AclUsersRepository::COL_PASSWORD => $params['password'],
 				AclUsersRepository::COL_EMAIL => $params['email'],

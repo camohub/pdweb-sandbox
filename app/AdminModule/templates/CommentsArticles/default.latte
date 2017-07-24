@@ -1,7 +1,7 @@
 
 {block content}
 
-{define title}{$article->title}{/define}
+{define title}{$article->getDefaultLang()->getTitle()}{/define}
 
 <div class="row">
 	<div class="col-xs-12">
@@ -11,15 +11,14 @@
 			</div>
 			<div class="box-body">
 				{snippet comments}
-					{if $comments->count()}
-						<div n:if="$comments->count()" n:class="xs-pad-15, $iterator->isOdd() ? bg-color-11"
-							 n:foreach="$comments as $comment">
-							<a n:href="visibility! comment_id => $comment->id"
-							   n:class="ajax, color-7, fa, fa-lg, pull-right, $comment->status == $commentsArticlesRepository::STATUS_PUBLISHED ? fa-trash-o : fa-minus-circle"
-							   title="{$comment->status == $commentsArticlesRepository::STATUS_PUBLISHED ? 'Unpublish' : 'Publish'}"> </a>
+					{if $article->getComments()->count()}
+						<div n:foreach="$article->getComments() as $comment" n:class="xs-pad-15, $iterator->isOdd() ? bg-color-11">
+							<a n:href="visibility! comment_id => $comment->getId()"
+							   n:class="ajax, color-7, fa, fa-lg, pull-right, $comment->getStatus()->getId() == \App\Model\Entity\Status::STATUS_PUBLISHED ? fa-trash-o : fa-minus-circle"
+							   title="{$comment->getStatus()->getId() == \App\Model\Entity\Status::STATUS_PUBLISHED ? 'Unpublish' : 'Publish'}"> </a>
 
-							<div class="small"><b>{$comment->user_name}</b> {$comment->created|date:'j.n.Y H:i'}</div>
-							<div class="xs-mar-ver-15">{$comment->content}</div>
+							<div class="small"><b>{$comment->getUserName()}</b> {$comment->getCreated()|date:'j.n.Y H:i'}</div>
+							<div class="xs-mar-ver-15">{$comment->getContent()}</div>
 						</div>
 					{else}
 						K článku neboli nájdené žiadne komentáre.

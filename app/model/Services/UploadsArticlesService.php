@@ -4,6 +4,8 @@ namespace App\Model\Services;
 
 
 use App;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
 use Nette;
 use App\Model\Repositories\UploadsArticlesRepository;
 use App\Model\Repositories\ModulesRepository;
@@ -13,10 +15,13 @@ use Tracy\Debugger;
 class UploadsArticlesService
 {
 
-	/** @var  UploadsArticlesRepository */
-	public $uploadsArticlesRepository;
+	/** @var  EntityManager */
+	public $em;
 
-	/** @var  ModulesRepository */
+	/** @var  EntityRepository */
+	public $uploadArticleRepository;
+
+	/** @var  EntityRepository */
 	public $modulesRepository;
 
 	/** @var  int */
@@ -29,10 +34,11 @@ class UploadsArticlesService
 	protected $www_dir;
 
 
-	public function __construct( $www_dir, UploadsArticlesRepository $uAR, ModulesRepository $mR )
+	public function __construct( $www_dir, EntityManager $em )
 	{
-		$this->uploadsArticlesRepository = $uAR;
-		$this->modulesRepository = $mR;
+		$this->em = $em;
+		$this->uploadArticleRepository = $em->getRepository( App\Model\Entity\ArticleUpload::class );
+		$this->modulesRepository = $em->getRepository( App\Model\Entity\Module::class );
 		$this->www_dir = $www_dir;
 	}
 
@@ -65,13 +71,13 @@ class UploadsArticlesService
 				$spl = new \SplFileInfo( $sName );
 				$sName = $spl->getBasename( '.' . $spl->getExtension() ) . '-' . microtime( TRUE ) . '.' . $spl->getExtension();
 
-				$this->uploadsArticlesRepository->getDatabase()->beginTransaction();
+				$this->em->beginTransaction();
 
 				try
 				{
 					try
 					{
-						$this->uploadsArticlesRepository->insert( [
+						$this->uploadArticleRepository->insert( [
 							'articles_id' => $id,
 							'name'   => $sName,
 						] );
@@ -79,7 +85,7 @@ class UploadsArticlesService
 					catch ( \PDOException $e )
 					{
 						// This catch ONLY checks duplicate entry to fields with UNIQUE KEY
-						$this->uploadsArticlesRepository->getDatabase()->rollBack();
+						$this->em->rollBack();
 
 						$info = $e->errorInfo;
 						// mysql==1062  sqlite==19  postgresql==23505
@@ -96,7 +102,7 @@ class UploadsArticlesService
 					}
 					catch ( \Exception $e )
 					{
-						$this->uploadsArticlesRepository->getDatabase()->rollBack();
+						$this->em->rollBack();
 						Debugger::log( $e->getMessage() . ' @in file ' . __FILE__ . ' on line ' . __LINE__, 'error' );
 						throw $e;
 					}
@@ -125,11 +131,11 @@ class UploadsArticlesService
 
 					$result['saved_items'][] = $name;
 
-					$this->uploadsArticlesRepository->getDatabase()->commit();
+					$this->em->commit();
 				}
 				catch ( \Exception $e )
 				{
-					$this->uploadsArticlesRepository->getDatabase()->rollback();
+					$this->em->rollback();
 					Debugger::log( $e->getMessage(), 'error' );
 					@$this->unlink( $path, $sName );  // If something is saved, delete it.
 					$result['errors'][] = 'Pri ukladaní súboru ' . $name . ' došlo k chybe. Súbor nebol uložený.';

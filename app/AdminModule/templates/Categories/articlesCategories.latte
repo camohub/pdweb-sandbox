@@ -16,22 +16,23 @@
 				<h2 class="box-title">Vytvoriť kategóriu</h2>
 			</div>
 			<div class="box-body">
+				{control articlesCategoryForm}
 
-				{form articlesCategoryForm, class => 'form-inline'}
+				{*{form articlesCategoryForm, class => 'form-inline'}
 					<div class="form-group">
 						{label name}{/label}
 						{input name}
 					</div>
 					<div class="form-group">
-						{*{snippet create_parent}*}
+						*}{*{snippet create_parent}*}{*
 						{label parent_id}{/label}
 						{input parent_id}
-						{*{/snippet}*}
+						*}{*{/snippet}*}{*
 					</div>
 					<div class="form-group">
 						{input sbmt}
 					</div>
-				{/form}
+				{/form}*}
 			</div>
 		</div>
 	</div>
@@ -47,29 +48,40 @@
 				{snippetArea sortableList}
 					{block menu}
 						<ul n:class="!isset($nested) ? sortable-wrapper, sortable-list"{* $nested comes from recursion *}>
+							{dump $categories}
 							{foreach $categories as $item}
-								<li data-module="{$item->module_id ?: 0|noescape}" id="categoryItems_{$item->id}">
+								<li id="categoryItems_{$item->getId()}">
 									<div>
-										<div class="inser-zone"></div>
+										<div class="insert-zone"></div>
 										{* Dynamic snippet with dynamic form from multiplier. Snippet does not contain sub tree. *}
-										{snippet editCategory-$item->id}
+										{var $id = 'editCategory-' . $item->getId()}
+										{snippet 'editCategory-' . $item->getId()}
 											<div class="actions">
-												<a n:href="changeArticlesCategoryVisibility! $item->id" n:class="ignore, ajax, fa, fa-lg, $item->visible ? fa-check-circle : fa-minus-circle, $item->visible ? color-5 : color-7" title="Visible/Hidden"> </a>
-												{if $item->app != 1}
-													<a href="#" class="ignore fa fa-lg fa-pencil color-5 " title="Edit"> </a>
-												{/if}
-												<a n:href="deleteArticleCategory! $item->id" {if !$presenter->isAjax()}style="display:none"{/if} class="ignore fa fa-lg fa-trash-o color-7" title="Delete"> </a>
+												<a n:href="changeArticlesCategoryVisibility! $item->getId()" n:class="ignore, ajax, fa, fa-lg, $item->getStatus()->getId() == \App\Model\Entity\Status::STATUS_PUBLISHED ? fa-check-circle : fa-minus-circle, $item->getStatus()->getId() == \App\Model\Entity\Status::STATUS_PUBLISHED ? color-5 : color-7" title="Visible/Hidden"> </a>
+												<a n:if="$item->getApp() != 1" href="#" class="ignore fa fa-lg fa-pencil color-5 " title="Edit"> </a>
+												<a n:if="$item->getApp() != 1" n:href="deleteArticleCategory! $item->getId()" {if !$presenter->isAjax()}style="display:none"{/if} class="ignore fa fa-lg fa-trash-o color-7" title="Delete"> </a>
 											</div>
 
-											<div class="category-name">{$item->name} {time()}</div>
-											{form editCategoryForm-$item->id, class => 'ajax form-inline disp-none'}
-												{input name, value => $item->name, class => 'form-conrol ignore'} {input sbmt, class => 'btn btn-primary btn-sm ignore'}
+											<div class="category-name">{$item->getDefaultLang()->getTitle()}</div>
+
+											{form 'editCategoryForm-' . $item->getId(), class => 'ajax disp-none clearfix'}
+												{formContainer titles}
+													{foreach  $formContainer->getComponents() as $i}
+														<div class="row xs-mar-ver-15">
+															<div class="col-sm-1">{label $i /}&nbsp;</div><div class="col-sm-8 col-md-4"> {input $i, class => 'form-control ignore'}</div>
+														</div>
+													{/foreach}
+												{/formContainer}
+												<div class="row xs-mar-ver-15">
+													<div class="col-sm-8 col-sm-offset-1">{input sbmt, class => 'btn btn-primary btn-sm ignore'}</div>
+												</div>
 											{/form}
+
 										{/snippet}
 									</div>
 
 									{if ! $presenter->isAjax()}
-										{if $categories = $categoriesArticlesRepository->findBy( [ 'parent_id' => $item->id ] )->order( 'priority ASC' )->fetchAll() }
+										{if $categories = $categoryArticleRepository->findBy( [ 'parent_id' => $item->getId() ], ['priority' => 'ASC'] ) }
 											{include menu, section => $categories, nested => 1}
 										{/if}
 									{/if}
@@ -104,7 +116,6 @@
 						$( '.fa-trash-o' ).css( {'display': 'inline-block'} );  // I do not want to display this function if js (confirm dialog) is off
 
 						$( '.sortable-wrapper' ).on( 'click', '.fa-pencil', function () {
-							$( this ).closest( 'li' ).find( '.category-name' ).first().slideToggle();
 							$( this ).closest( 'li' ).find( 'form' ).first().slideToggle();
 						});
 

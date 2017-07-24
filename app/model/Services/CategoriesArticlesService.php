@@ -1,9 +1,16 @@
 <?php
+
+
 namespace App\Model\Services;
 
 
 use App;
+use App\Model\Entity;
 use App\Model\Repositories\ArticlesRepository;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
+use Kdyby\Doctrine\ResultSet;
 use Kdyby\Translation\Translator;
 use Nette;
 use Nette\Utils\Strings;
@@ -15,62 +22,80 @@ use Tracy\Debugger;
 class CategoriesArticlesService
 {
 
-	/** @var CategoriesArticlesRepository */
-	protected $categoriesArticlesRepository;
+	const CACHE = 'articles_categories_cache';
+	const CACHE_TAG = 'articles_categories_cache_tag';
 
-	/** @var ArticlesCategoriesArticlesRepository */
-	protected $articlesCategoriesArticlesRepository;
 
-	/** @var ArticlesRepository */
-	protected $articlesLangsRepository;
+	/** @var EntityManager */
+	protected $em;
+
+	/** @var  @var Nette\Caching\IStorage */
+	protected $storage;
+
+	/** @var  @var Nette\Caching\Cache */
+	public $cache;
+
+	/** @var EntityRepository */
+	public $categoryArticleRepository;
+
+	/** @var EntityRepository */
+	public $statusRepository;
+
+	/** @var EntityRepository */
+	public $langRepository;
 
 	/** @var Translator */
 	protected $translator;
 
 
 	/**
-	 * @param CategoriesArticlesRepository $cAR
-	 * @param ArticlesCategoriesArticlesRepository $aCAR
-	 * @param ArticlesRepository $aR
+	 * @param EntityManager $em
+	 * @param Translator $tr
 	 */
-	public function __construct( CategoriesArticlesRepository $cAR, ArticlesCategoriesArticlesRepository $aCAR, ArticlesRepository $aR, Translator $tr )
+	public function __construct( EntityManager $em, Nette\Caching\IStorage $s, Translator $tr )
 	{
-		$this->categoriesArticlesRepository = $cAR;
-		$this->articlesCategoriesArticlesRepository = $aCAR;
-		$this->articlesRepository = $aR;
+		$this->em = $em;
+		$this->storage = $s;
+		$this->cache = new Nette\Caching\Cache( $this->storage, self::CACHE );
+		$this->categoryArticleRepository = $em->getRepository( Entity\CategoryArticle::class );
+		$this->categoryArticleLangRepository = $em->getRepository( Entity\CategoryArticleLang::class );
+		$this->statusRepository = $em->getRepository( Entity\Status::class );
+		$this->langRepository = $em->getRepository( Entity\Lang::class );
 		$this->translator = $tr;
 	}
 
 
 	/**
-	 * @param $id integer
-	 * @return Nette\Database\Table\ActiveRow
+	 * @param $category
+	 * @return mixed
 	 */
-	public function switchVisibility( $id )
+	public function switchVisibility( $category )
 	{
-		$row = $this->categoriesArticlesRepository->findOneBy( ['id' => (int)$id] );
-		$row->update( ['visible' => $row->visible == 1 ? 0 : 1] );
-		$this->categoriesArticlesRepository->cleanCache();
+		$status = $this->statusRepository->find( $category->getStatus()->getId() == Entity\Status::STATUS_PUBLISHED ? Entity\Status::STATUS_UNPUBLISHED : Entity\Status::STATUS_PUBLISHED );
+		$category->setStatus( $status );
+		$this->em->flush( $category );
 
-		return $row;
+		$this->cleanCache();
+
+		return $category;
 	}
 
 
 	/**
 	 * @desc Find ids of category and nested categories.
-	 * @param int $id
+	 * @param Entity\CategoryArticle $category
 	 * @param $ids array
 	 * @return array
 	 */
-	public function findCategoryTreeIds( $id, array $ids = [] )
+	public function findCategoryTreeIds( Entity\CategoryArticle $category, array $ids = [] )
 	{
-		$ids[] = $id;
+		$ids[] = $category->getId();
 
-		if ( $children = $this->categoriesArticlesRepository->findBy( [ 'parent_id' => $id ] ) )
+		if ( $children = $this->categoryArticleRepository->findBy( [ 'parent_id' => $category->getId() ] ) )
 		{
 			foreach ( $children as $child )
 			{
-				$ids = $this->findCategoryTreeIds( $child->id, $ids );
+				$ids = $this->findCategoryTreeIds( $child, $ids );
 			}
 		}
 
@@ -80,19 +105,25 @@ class CategoriesArticlesService
 
 	/**
 	 * @desc This method find all articles ids in blog_article_category which belongs to cat_ids
-	 * @param int $id
-	 * @return Nette\Database\Table\Selection
+	 * @param Entity\CategoryArticle $category
+	 * @return ResultSet
 	 */
-	public function findCategoryArticles( $id )
+	public function findCategoryArticles( $category )
 	{
-		$cat_ids = $this->findCategoryTreeIds( $id );
-		$art_ids = $this->articlesCategoriesArticlesRepository->findBy( ['categories_articles_id' => $cat_ids] )->fetchPairs( NULL, 'articles_id' );
+		if( is_numeric( $category ) ) $category = $this->categoryArticleRepository->find( $category );
 
-		$articles = $this->articlesRepository
-			->findBy( ['articles.id' => $art_ids, ':articles_langs.langs_code' => $this->translator->getLocale()] )
-			->order( 'articles.id DESC' );
+		$cat_ids = $this->findCategoryTreeIds( $category );
 
-		return $articles;
+		$criteria = [ 'categories.id' => $cat_ids ];
+		$articles = $this->categoryArticleRepository->createQueryBuilder()
+			->select( 'a' )
+			->from( 'App\Model\Entity\Article', 'a' )
+			->whereCriteria( $criteria )
+			->orderBy( 'a.created', 'DESC' )
+			->getQuery();
+
+		// Returns ResultSet because of paginator.
+		return new ResultSet( $articles );
 	}
 
 
@@ -103,23 +134,23 @@ class CategoriesArticlesService
 	 * @param int $lev
 	 * @return array
 	 */
-	public function toSelect( $arr = [], $result = [], $lev = 0 )
+	public function categoriesToSelect( $arr = [], $result = [], $lev = 0 )
 	{
 		if ( ! $arr )  // First call.
 		{
-			$arr = $this->categoriesArticlesRepository->findBy( [ 'parent_id' => NULL ] )->order( 'priority ASC' );
+			$arr = $this->categoryArticleRepository->findBy( [ 'parent_id =' => NULL ], [ 'priority' => 'ASC' ] );
 		}
 
 		foreach ( $arr as $item )
 		{
-			if ( $item->id != 1 )  // 1 == Najnovšie and it is not optional value
+			if ( $item->getId() != Entity\CategoryArticle::CATEGORY_NEWS )  // Najnovšie is not optional value
 			{
-				$result[$item->id] = str_repeat( '>', $lev * 1 ) . ' ' .$item->name;
+				$result[$item->getId()] = str_repeat( '>', $lev * 1 ) . $item->getDefaultLang()->getTitle();
 			}
 
-			if ( $arr = $this->categoriesArticlesRepository->findBy( [ 'parent_id =' => $item->id ] )->order( 'priority ASC' ) )
+			if ( $arr = $this->categoryArticleRepository->findBy( [ 'parent_id =' => $item->getId() ], [ 'priority' => 'ASC' ] ) )
 			{
-				$result = $this->toSelect( $arr, $result, $lev + 1 );
+				$result = $this->categoriesToSelect( $arr, $result, $lev + 1 );
 			}
 		}
 
@@ -128,158 +159,195 @@ class CategoriesArticlesService
 
 
 	/**
-	 * @desc Creats new cat. for blog module with specific params like url, module.
-	 * @param $params
-	 * @return Nette\Database\Table\ActiveRow
+	 * @param \ArrayAccess $params
+	 * @return Entity\CategoryArticle
 	 * @throws App\Exceptions\DuplicateEntryException
+	 * @throws \Exception
 	 */
 	public function createCategory( \ArrayAccess $params )
 	{
-		$params['slug'] = Strings::webalize( $params['name'] );
-		$params['url'] = ':Articles:category';
-		$params['url_params'] = $params['slug'];
-		// If parent_id is not set or is 0 => NULL
-		$params['parent_id'] = isset( $params['parent_id'] ) && $params['parent_id'] != 0 ? $params['parent_id'] : NULL;
-		$params['visible'] = 1;
-		$params['app'] = 0;
-		$params['priority'] = 0;
+		$this->em->beginTransaction();
 
-		if ( $this->categoriesArticlesRepository->findOneBy( ['slug' => $params['slug']] ) )
+		try
 		{
-			throw new App\Exceptions\DuplicateEntryException( 'Kategória s názvom ' . $params['name'] . 'už existuje.', 1 );
+			$same_level_categories = $this->categoryArticleRepository->findBy( [ 'parent_id' => $params['parent_id'] ] );
+			foreach ( $same_level_categories as $cat )
+			{
+				$cat->setPriority( $cat->getPriority() + 1 );
+			}
+			$this->em->flush( $same_level_categories );
+
+
+			$category = new Entity\CategoryArticle();
+			$this->em->persist( $category );
+			$category->setParent( isset( $params['parent_id'] ) ? $this->categoryArticleRepository->find( $params['parent_id'] ) : NULL );
+			$category->setStatus( $this->statusRepository->find( Entity\Status::STATUS_UNPUBLISHED ) );
+			$category->setUrl( ':Front:Articles:show' );
+			$this->em->flush( $category );
+
+
+			$langs = $this->langRepository->findBy( [], ['id' => 'ASC'] );
+			foreach ( $langs as $lang )
+			{
+				$category_lang = new App\Model\Entity\CategoryArticleLang();
+				$this->em->persist( $category_lang );
+				$category_lang->setCategory( $category );
+				$category_lang->setLang( $lang );
+				$category_lang->setTitle( $params['titles'][$lang->getCode()] );
+				$category->addLang( $category_lang );
+				$this->em->flush( $category_lang );
+			}
+
+		}
+		catch ( UniqueConstraintViolationException $e )
+		{
+			$this->em->rollback();
+			throw new App\Exceptions\DuplicateEntryException( 'Kategória so zadaným názvom už exituje. Názov musí byť unikátny pre každý jazyk.' );
+		}
+		catch ( \Exception $e )
+		{
+			$this->em->rollback();
+			Debugger::log( $e->getMessage() . ' @ in file ' . __FILE__ . ' on line ' . __LINE__, 'error' );
+			throw $e;
 		}
 
-		$sameLevelCats = $this->categoriesArticlesRepository->findBy( [ 'parent_id' => $params['parent_id'] ] )->order( 'priority ASC' );
-		foreach ( $sameLevelCats as $row )
-		{
-			$this->categoriesArticlesRepository->update( $row->id, ['priority' => $row->priority + 1] );
-		}
-
-		$category = $this->categoriesArticlesRepository->insert( $params );
-
+		$this->em->commit();
 		return $category;
 	}
 
 
 	/**
-	 * @param $id int
-	 * @param $name string
-	 * @return Nette\Database\Table\ActiveRow
-	 * @throws App\Exceptions\ItemNotFoundException
-	 * @throws \Exception
+	 * @param $id
+	 * @param array $names
+	 * @return null|object
+	 * @throws App\Exceptions\DuplicateEntryException
 	 */
-	public function updateName( $id, $name )
+	public function updateTitle( $id, array $names )
 	{
-		$slug = $url_params = Strings::webalize( $name );
-
+		// No need transaction...
 		try
 		{
-			return $this->categoriesArticlesRepository->update( $id, ['name' => $name, 'slug' => $slug] );
-		}
-		catch ( \PDOException $e )
-		{
-			// This catch ONLY checks duplicate entry to fields with UNIQUE KEY
-			$info = $e->errorInfo;
-			// mysql==1062  sqlite==19  postgresql==23505
-			if ( $info[0] == 23000 && $info[1] == 1062 )
+			$category = $this->categoryArticleRepository->find( $id );
+			foreach ( $category->getLangs() as $lang )
 			{
-				throw new App\Exceptions\DuplicateEntryException( 'Položka s rovnakým názvom už existuje' );
+				$lang->setTitle( $names[$lang->getCode()] );
+				$this->em->flush( $lang );
 			}
-			else { throw $e; }
 		}
+		catch ( UniqueConstraintViolationException $e )
+		{
+			throw new App\Exceptions\DuplicateEntryException( 'Kategória s rovnakým názvom už exituje. Názov musí byť v každnom jazyku unikátny.' );
+		}
+
+		return $category;
 
 	}
-
-
-	public function updatePriority( array $arr )
-	{
-		$categories = $this->categoriesArticlesRepository->findAll()->fetchPairs( 'id' );
-
-		$i = 1;
-		foreach ( $arr as $key => $val )
-		{
-			$row = $categories[(int)$key];
-			$val = (int)$val == 0 ? NULL : (int)$val;
-
-			// if the array is large it would be better to update only changed items
-			if( $row->parent_id != $val || $row->priority != $i )
-			{
-				$row->update( ['parent_id' => $val, 'priority' => $i] );
-			}
-			$i++;
-		}
-
-		$this->categoriesArticlesRepository->cleanCache();
-	}
-
 
 
 	/**
-	 * @param $id
-	 * @return array
-	 * @throws ContainsArticleException
-	 * @throws PartOfAppException
-	 * @throws \Exception
+	 * @param array $arr
+	 * @return bool
 	 */
-	public function delete( $id )
+	public function updatePriority( array $arr )
 	{
-		if( ! $row = $this->categoriesArticlesRepository->findOneBy( [ 'id' => (int) $id ] ) )
+		$pairs = $this->categoryArticleRepository->findAssoc( 'id' );
+		$i = 1;
+		foreach ( $arr as $key => $val )
 		{
-			throw new NoArticleException( 'Article not found.' );
+			// if the array is large it would be better to update only changed items
+			$pairs[(int) $key]->setParentId( $val == 0 ? NULL : (int) $val );
+			$pairs[(int) $key]->setPriority( $i );
+			$i++;
 		}
 
-		$result = $this->canDelete( $row );
+		$this->em->flush();
+		$this->cleanCache();
+
+		return true;
+	}
+
+
+	/**
+	 * @param $category
+	 * @return array
+	 * @throws ContainsArticleException
+	 * @throws NoCategoryException
+	 * @throws PartOfAppException
+	 */
+	public function delete( Entity\CategoryArticle $category )
+	{
+		if( ! $category )
+		{
+			throw new NoCategoryException( 'Category not found.' );
+		}
+
+		$result = $this->canDelete( $category );
 
 		if ( isset( $result['app_error'] ) )
 		{
-			throw new PartOfAppException( 'Item can not be deleted because item ' . $result['app_error'] . ' is native part of application and can not be deleted.' );
+			throw new PartOfAppException( 'Category can not be deleted because category ' . $result['app_error'] . ' is native part of application and can not be deleted.' );
 		}
 		if ( isset( $result['articles_error'] ) )
 		{
-			throw new ContainsArticleException( 'Item can not be deleted because item ' . $result['articles_error'] . ' contains one or more articles.' );
+			throw new ContainsArticleException( 'Category can not be deleted because category ' . $result['articles_error'] . ' contains one or more articles.' );
 		}
-
-		$this->categoriesArticlesRepository->cleanCache();
 
 		$names = [];
-		foreach ( $result['items'] as $row )
+
+		foreach ( $result['items'] as $item )
 		{
-			$names[] = $row->name;
-			$row->delete();
+			$names[] = $item->getDefaultLang()->getTitle();
+			$this->em->remove( $item );
 		}
 
+		$this->em->flush();
+
+		$this->cleanCache();
+
 		return $names;
+
+	}
+
+
+	public function cleanCache()
+	{
+		$langs = $this->langRepository->findAll();
+		foreach ( $langs as $lang )
+		{
+			$this->cache->clean( [ Nette\Caching\Cache::TAGS => [ self::CACHE_TAG . $lang->getCode()/*, 'is_in_cache'*/ ] ] );
+		}
+
 	}
 
 
 //////Protected/Private///////////////////////////////////////////////////////
 
 	/**
-	 * @desc If $result contains app or article key, it means check is invalid ans can not be deleted.
-	 * @param Nette\Database\Table\IRow $row
-	 * @param array $result
-	 * @return array
+	 * @param Entity\CategoryArticle $category
+	 * @param null $result
+	 * @return array|null
 	 */
-	protected function canDelete( Nette\Database\Table\IRow $row, $result = NULL )
+	protected function canDelete( Entity\CategoryArticle $category, $result = NULL )
 	{
 		$result = $result ?: [ 'items' => [] ];
 
-		if ( $this->articlesCategoriesArticlesRepository->findBy( ['categories_articles_id' => $row->id] )->count() )
+		if ( $category->getArticles()->count() )
 		{
-			$result = [ 'articles_error' => $row->name ];
+			$result = [ 'articles_error' => $category->getDefaultLang()->getTitle() ];
 			return $result;
 		}
-		if ( $row->app )
+		if ( $category->getApp() )
 		{
-			$result = [ 'app_error' => $row->name ];
+			$result = [ 'app_error' => $category->getDefaultLang()->getTitle() ];
 			return $result;
 		}
 
-		foreach ( $this->categoriesArticlesRepository->findBy( ['parent_id' => $row->id] ) as $child )
+		foreach ( $category->getChildren() as $child )
 		{
 			$result = $this->canDelete( $child, $result );
 		}
-		$result['items'][] = $row;
+
+		$result['items'][] = $category;
 
 		return $result;
 
@@ -299,6 +367,11 @@ class ContainsArticleException extends \Exception
 }
 
 class NoArticleException extends \Exception
+{
+	// Entity not found.
+}
+
+class NoCategoryException extends \Exception
 {
 	// Entity not found.
 }

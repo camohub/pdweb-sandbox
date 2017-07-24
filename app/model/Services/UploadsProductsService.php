@@ -4,6 +4,8 @@ namespace App\Model\Services;
 
 
 use App;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
 use Nette;
 use App\Model\Repositories\UploadsProductsRepository;
 use App\Model\Repositories\ModulesRepository;
@@ -12,11 +14,14 @@ use App\Model\Repositories\ModulesRepository;
 class UploadsProductsService
 {
 
-	/** @var  UploadsProductsRepository */
-	public $uploadsProductsRepository;
+	/** @var EntityManager */
+	public $em;
 
-	/** @var  ModulesRepository */
-	public $modulesRepository;
+	/** @var  EntityRepository */
+	public $uploadProductRepository;
+
+	/** @var  EntityRepository */
+	public $moduleRepository;
 
 	/** @var  int */
 	protected $blog_module_id;
@@ -28,10 +33,11 @@ class UploadsProductsService
 	protected $www_dir;
 
 
-	public function __construct( $www_dir, UploadsProductsRepository $uPR, ModulesRepository $mR )
+	public function __construct( $www_dir, EntityManager $em )
 	{
-		$this->uploadsProductsRepository = $uPR;
-		$this->modulesRepository = $mR;
+		$this->em = $em;
+		$this->uploadProductRepository = $em->getRepository( Entity\ProductUpload::class);
+		$this->modulesRepository = $em->getRepository( App\Model\Entity\Module::class );
 		$this->www_dir = $www_dir;
 	}
 

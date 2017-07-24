@@ -3,12 +3,12 @@
 namespace App\AdminModule\Forms;
 
 
-use Nette;
 use App;
-use App\Model\Repositories\ArticlesCategoriesArticlesRepository;
-use App\Model\Repositories\CategoriesArticlesRepository;
+use Nette;
+use App\Model\Entity;
+use Kdyby\Doctrine\EntityManager;
+use Doctrine\ORM\EntityRepository;
 use App\Model\Services\CategoriesArticlesService;
-use App\Model\Repositories\ArticlesRepository;
 use App\Model\Services\ArticlesService;
 use Nette\Application\UI\Form;
 use Tracy\Debugger;
@@ -17,8 +17,17 @@ use Tracy\Debugger;
 class ArticleFormFactory
 {
 
-	/** @var  ArticlesRepository */
-	protected $articlesRepository;
+	use BootstrapRenderTrait;
+
+
+	/** @var  EntityManager */
+	protected $em;
+
+	/** @var  EntityRepository */
+	protected $langRepository;
+
+	/** @var  EntityRepository */
+	protected $articleRepository;
 
 	/** @var  ArticlesService */
 	protected $articlesService;
@@ -26,16 +35,14 @@ class ArticleFormFactory
 	/** @var  CategoriesArticlesService */
 	protected $categoriesService;
 
-	/** @var  ArticlesCategoriesArticlesRepository */
-	protected $articlesCategoriesArticlesRepository;
 
-
-	public function __construct( ArticlesRepository $aR, ArticlesService $aS, CategoriesArticlesService $cAS, ArticlesCategoriesArticlesRepository $aCAR )
+	public function __construct( EntityManager $em, ArticlesService $aS, CategoriesArticlesService $cAS )
 	{
-		$this->articlesRepository = $aR;
+		$this->em = $em;
 		$this->articlesService = $aS;
 		$this->categoriesArticlesService = $cAS;
-		$this->articlesCategoriesArticlesRepository = $aCAR;
+		$this->langRepository = $this->em->getRepository( Entity\Lang::class );
+		$this->articleRepository = $this->em->getRepository( Entity\Lang::class );
 	}
 
 
@@ -43,45 +50,74 @@ class ArticleFormFactory
 	{
 		$form = new Form;
 
+		// This line is IMPORTANT!!!
 		$form->getElementPrototype()->onsubmit('tinyMCE.triggerSave()');
 
 		$form->addProtection( 'Vypršal čas vyhradený pre odoslanie formulára. Z dôvodu rizika útoku CSRF bola požiadavka na server zamietnutá.' );
 
-		$form->addText( 'meta_desc', 'Popis', 60 )
-			->setRequired( 'Popis je povinná položka.' )
-			->setAttribute( 'class', 'form-control' );
+		$article = $this->articlesService->articleRepository->find( $id );
 
-		$form->addText( 'title', 'Nadpis', 60 )
-			->setRequired( 'Nadpis je povinná položka.' )
-			->setAttribute( 'class', 'form-control' );
+		$form->addGroup( 'Popis' );
+		$meta_desc = $form->addContainer( 'meta_desc' );
 
-		$form->addTextArea( 'perex', 'Perex' )
-			->setRequired( 'Perex je povinná položka.' )
-			->setAttribute( 'class', 'show-hidden-error form-control editor' );  // show-hidden-errors is necessary because of live-form-validation.js
+		foreach ( $article->getLangs() as $lang )
+		{
+			$meta_desc->addText( $lang->getCode(), $lang->getCode(), 60 )
+				->setRequired( 'Popis je povinná položka.' )
+				->setAttribute( 'class', 'form-control' )
+				->setDefaultValue( $lang->getMetaDesc() );
+		}
 
-		$form->addTextArea( 'content', 'Text', 120, 25 )
-			->setRequired( 'Text je povinná položka.' )
-			->setAttribute( 'class', 'show-hidden-error form-control editor' );
+		$form->addGroup( 'Nadpis' );
+		$title = $form->addContainer( 'title' );
 
-		$cat_sel = $this->categoriesArticlesService->toSelect();
+		foreach ( $article->getLangs() as $lang )
+		{
+			$title->addText( $lang->getCode(), $lang->getCode(), 60 )
+				->setRequired( 'Nadpis je povinná položka.' )
+				->setAttribute( 'class', 'form-control' )
+				->setDefaultValue( $lang->getTitle() );
+		}
+
+		$form->addGroup( 'Perex' );
+		$perex = $form->addContainer( 'perex' );
+
+		foreach ( $article->getLangs() as $lang )
+		{
+			$perex->addTextArea( $lang->getCode(), $lang->getCode() )
+				->setRequired( 'Perex je povinná položka.' )
+				->setAttribute( 'class', 'show-hidden-error form-control editor' )  // show-hidden-errors is necessary because of live-form-validation.js
+			->setDefaultValue( $lang->getPerex() );
+		}
+
+		$form->addGroup( 'Text' );
+		$content = $form->addContainer( 'content' );
+
+		foreach ( $article->getLangs() as $lang )
+		{
+			$content->addTextArea( $lang->getCode(), $lang->getCode(), 120, 15 )
+				->setRequired( 'Text je povinná položka.' )
+				->setAttribute( 'class', 'show-hidden-error form-control editor' )
+				->setDefaultValue( $lang->getContent() );
+		}
+
+		$form->addGroup( 'Ďalšie nastavenia' );
+		$cat_sel = $this->categoriesArticlesService->categoriesToSelect();
 		$form->addMultiSelect( 'categories', 'Vyberte kategóriu', $cat_sel, 8 )
-			->setRequired( 'Aplikácia vyžaduje, aby bola priradená kategória pre článok.' )
-			->setAttribute( 'class', 'form-control' );
+			->setAttribute( 'class', 'form-control' )
+			->setDefaultValue( $article->getDefaultCategoriesToSelect() );
 
 		// May be it should be a select in the future.
-		$form->addCheckbox( 'articles_statuses_id', ' Zverejniť' );
+		$form->addCheckbox( 'statuses_id', ' Zverejniť' )
+			->setDefaultValue( $article->status->getId() || Entity\Status::STATUS_DRAFT || Entity\Status::STATUS_PUBLISHED ? true : false );
 
-		$article = $this->articlesRepository->findOneBy( ['id' => $id] );
-		$form->setDefaults( $article );
-		$form['articles_statuses_id']->setDefaultValue( $article->articles_statuses_id == ArticlesRepository::STATUS_PUBLISHED || $article->articles_statuses_id == ArticlesRepository::STATUS_VIRTUAL ? true : false );
-		$form['categories']->setDefaultValue( $this->articlesCategoriesArticlesRepository->findBy( ['articles_id' => $id, 'NOT categories_articles_id' => CategoriesArticlesRepository::NEWS_CATEGORY] )->fetchPairs( 'categories_articles_id', 'categories_articles_id' ) );
 
-		$form->addSubmit( 'sbmt', 'Uložiť' )
-			->setAttribute( 'class', ['btn btn-primary'] );
+		$form->addSubmit( 'sbmt', 'Uložiť článok' )
+			->setAttribute( 'class', 'btn btn-primary' );
 
 		$form->onSuccess[] = [$this, 'formSucceeded'];
 
-		return $form;
+		return $this->setBootstrapRender( $form );
 	}
 
 
@@ -94,11 +130,11 @@ class ArticleFormFactory
 		$values['perex'] = preg_replace( '#<pre>#', '<pre class="prettyprint custom">', $values['perex'] );
 		$values['content'] = preg_replace( '#<pre>#', '<pre class="prettyprint custom">', $values['content'] );
 
-		// We do not test ID cause every new article already has an ID as "virtual" article.
+		// We do not test ID cause every new article already has an ID as "draft" article.
 		try
 		{
 			$this->articlesService->updateArticle( $values, $id );
-			$presenter->flashMessage( 'Článok bol upravený.' );
+			$presenter->flashMessage( 'Článok bol uložený.' );
 		}
 		catch ( App\Exceptions\DuplicateEntryException $e )
 		{
@@ -107,7 +143,7 @@ class ArticleFormFactory
 		}
 		catch ( \Exception $e )
 		{
-			$form->addError( 'Pri ukladaní článku došlo k chybe.' );
+			$form->addError( 'Pri ukladaní článku došlo k chybe. Skúste to prosím znova, alebo kontaktujte adminstrátora.' );
 			Debugger::log( $e->getMessage() . ' @ in file ' . __FILE__ . ' on line ' . __LINE__, Debugger::ERROR );
 			return $form;
 		}

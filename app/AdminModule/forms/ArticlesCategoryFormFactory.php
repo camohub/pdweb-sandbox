@@ -4,6 +4,8 @@ namespace App\AdminModule\Forms;
 
 
 use App;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
 use Nette;
 use App\Model\Repositories\ArticlesCategoriesArticlesRepository;
 use App\Model\Repositories\ArticlesCategoriesRepository;
@@ -15,17 +17,24 @@ use Tracy\Debugger;
 class ArticlesCategoryFormFactory
 {
 
+	use BootstrapRenderTrait;
+
+
+	/** @var  EntityManager */
+	protected $em;
+
 	/** @var  CategoriesArticlesService */
 	protected $categoriesArticlesService;
 
-	/** @var  ArticlesCategoriesArticlesRepository */
-	protected $articlesCategoriesArticlesRepository;
+	/** @var  EntityRepository */
+	protected $langsRepository;
 
 
-	public function __construct( CategoriesArticlesService $cAS, ArticlesCategoriesArticlesRepository $aCAR )
+	public function __construct( EntityManager $em, CategoriesArticlesService $cAS )
 	{
+		$this->em = $em;
 		$this->categoriesArticlesService = $cAS;
-		$this->articlesCategoriesArticlesRepository = $aCAR;
+		$this->langsRepository = $em->getRepository( App\Model\Entity\Lang::class );
 	}
 
 
@@ -36,11 +45,19 @@ class ArticlesCategoryFormFactory
 
 		$form->addProtection( 'Vypršal čas vyhradený pre odoslanie formulára. Z dôvodu rizika útoku CSRF bola požiadavka na server zamietnutá.' );
 
-		$form->addText( 'name', 'Zvoľte názov' )
-			->setRequired( 'Pole názov musí byť vyplnené.' )
-			->setAttribute( 'class', 'form-control' );
+		$langs = $this->langsRepository->findBy( [], ['id' => 'ASC'] );
 
-		$form->addSelect( 'parent_id', 'Vyberte pozíciu', $this->categoriesArticlesService->toSelect() )
+		$form->addGroup();
+
+		$names = $form->addContainer( 'titles', 'Názov kategórie' );
+		foreach ( $langs as $lang )
+		{
+			$names->addText( $lang->getCode(), 'Názov ' . $lang->getCode() )
+				->setRequired( 'Názov je povinné pole pre každý jazyk.' )
+				->setAttribute( 'class', 'form-control' );
+		}
+
+		$form->addSelect( 'parent_id', 'Vyberte pozíciu', $this->categoriesArticlesService->categoriesToSelect() )
 			->setPrompt( '' )
 			->setAttribute( 'class', 'form-control select2' );
 
@@ -49,7 +66,7 @@ class ArticlesCategoryFormFactory
 
 		$form->onSuccess[] = [$this, 'formSucceeded'];
 
-		return $form;
+		return $this->setBootstrapRender( $form );
 	}
 
 

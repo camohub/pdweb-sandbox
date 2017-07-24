@@ -5,6 +5,8 @@ namespace App\AdminModule\Presenters;
 
 
 use App;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
 use Nette;
 use Nette\Application\UI\Form;
 use App\Model\Repositories\ArticlesRepository;
@@ -15,14 +17,14 @@ use Tracy\Debugger;
 class ArticlesPresenter extends App\AdminModule\Presenters\BasePresenter
 {
 
+	/** @var  EntityManager @inject */
+	public $em;
+
+	/** @var EntityRepository */
+	public $userRepository;
+
 	/** @var  ArticlesService @inject */
 	public $articlesService;
-
-	/** @var  ArticlesRepository @inject */
-	public $articlesRepository;
-
-	/** @var  App\Model\Repositories\AclUsersRepository @inject */
-	public $aclUsersRepository;
 
 	/** @var  App\AdminModule\Forms\ArticleFormFactory @inject */
 	public $articleFormFactory;
@@ -30,10 +32,7 @@ class ArticlesPresenter extends App\AdminModule\Presenters\BasePresenter
 	/** @var  App\AdminModule\Components\ArticlesDataGridFactory @inject */
 	public $articlesDataGridFactory;
 
-	/** @var  App\AdminModule\Components\ArticlesDataGrid5Factory @inject */
-	public $articlesDataGrid5Factory;
-
-	/** @var  Nette\Database\IRow */
+	/** @var  App\Model\Entity\Article */
 	public $article;
 
 	/** @var  Nette\Http\SessionSection */
@@ -46,7 +45,8 @@ class ArticlesPresenter extends App\AdminModule\Presenters\BasePresenter
 	public function startup()
 	{
 		parent::startup();
-		$this->adminArticlesSession = $this->getSession( 'adminArticles' );
+		$this->adminArticlesSession = $this->getSession( 'admin_articles' );
+		$this->userRepository = $this->em->getRepository( App\Model\Entity\User::class );
 	}
 
 
@@ -69,19 +69,29 @@ class ArticlesPresenter extends App\AdminModule\Presenters\BasePresenter
 			throw new App\Exceptions\AccessDeniedException( 'Nemáte oprávnenie vytvárať články.' );
 		}
 
-		// This ID will be used to name image uploads/ID directory. Otherwise we can't create article specific dir for images.
-		$id = $this->articlesService->createVirtualArticle();
-		$this->forward( ':Admin:Articles:edit', $id );
+		try
+		{
+			// This ID will be used to name image uploads/ID directory. Otherwise we can't create article specific dir for images.
+			$article = $this->articlesService->createDraft();
+		}
+		catch( \Exception $e )
+		{
+			Debugger::log( $e->getMessage() . ' @ in file ' . __FILE__ . ' on line ' . __LINE__, 'error' );
+			$this->flashMessage( 'Pri vytváraní článku došlo k chybe. Súste to prosím znova, alebo kontaktujte administrátora.', 'error' );
+			$this->forward( ':Admin:Articles:default' );
+		}
+
+		$this->forward( ':Admin:Articles:edit', $article->getId() );
 	}
 
 
 	public function actionEdit( $id )
 	{
 		$this->id = $this->template->id = $id;
-		$article = $this->articlesRepository->findOneBy( ['id' => $id] );
+		$article = $this->articlesService->articleRepository->find( $id );
 
 		if ( ! $this->user->isAllowed( 'article', 'edit' )
-			|| ! $this->user->id == $article->acl_users_id
+			|| ! $this->user->id == $article->user->getId()
 			|| ! $this->user->isInRole( 'admin' )
 		)
 		{
@@ -98,10 +108,10 @@ class ArticlesPresenter extends App\AdminModule\Presenters\BasePresenter
 	 */
 	public function handleVisibility( $id )
 	{
-		$article = $this->articlesRepository->findOneBy( ['id' => (int) $id] );
+		$article = $this->articlesService->articleRepository->find( $id );
 
 		if ( ! $this->user->isAllowed( 'article', 'edit' )
-			|| ! $article->acl_users_id == $this->user->id
+			|| ! $article->user->getId() == $this->user->id
 			|| ! $this->user->isInRole( 'admin' )
 		)
 		{
@@ -116,7 +126,7 @@ class ArticlesPresenter extends App\AdminModule\Presenters\BasePresenter
 		catch ( \Exception $e )
 		{
 			Debugger::log( $e->getMessage() . ' @ in ' . $e->getFile() . ' on line ' . $e->getLine(), Debugger::ERROR );
-			$this->flashMessage( 'Pri upravovaní údajov došlo k chybe.', Debugger::ERROR );
+			$this->flashMessage( 'Pri ukladaní údajov došlo k chybe.', Debugger::ERROR );
 			// Do not return. Because of @secured it needs to be redirected.
 		}
 
@@ -132,10 +142,10 @@ class ArticlesPresenter extends App\AdminModule\Presenters\BasePresenter
 	 */
 	public function handleDelete( $id )
 	{
-		$article = $this->articlesRepository->findOneBy( ['id' => (int) $id] );
+		$article = $this->articlesService->articleRepository->find( $id );
 
 		if ( ! $this->user->isAllowed( 'article', 'delete' )
-			|| ! $article->acl_users_id == $this->user->id
+			|| ! $article->getUser()->getId() == $this->user->id
 			|| ! $this->user->isInRole( 'admin' )
 		)
 		{
@@ -144,7 +154,7 @@ class ArticlesPresenter extends App\AdminModule\Presenters\BasePresenter
 
 		try
 		{
-			$this->articlesRepository->update( $article->id, ['articles_statuses_id' => ArticlesRepository::STATUS_DELETED] );
+			$this->articlesService->delete( $article );
 			$this->flashMessage( 'Článok bol zmazaný.' );
 		}
 		catch ( \Exception $e )

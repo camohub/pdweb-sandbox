@@ -3,6 +3,8 @@
 namespace App\AdminModule\Presenters;
 
 use App;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
 use Nette;
 use Tracy\Debugger;
 
@@ -10,13 +12,36 @@ use Tracy\Debugger;
 class DefaultPresenter extends BasePresenter
 {
 
-    protected function beforeRender()
-    {
-        $this->template->config = $this->context->parameters;
-    }
+	/** @var EntityManager @inject */
+	public $em;
+
+	/** @var App\Model\Services\ArticlesService @inject */
+	public $articleService;
+
+	/** @var EntityRepository */
+	public $articleRepository;
 
 
-    public function createComponentTinyForm()
+	public function startup()
+	{
+		parent::startup();
+		$this->articleRepository = $this->em->getRepository( App\Model\Entity\Article::class );
+	}
+
+	protected function beforeRender()
+	{
+		$this->template->config = $this->context->parameters;
+
+	}
+
+
+	public function renderDefault()
+	{
+
+	}
+
+
+	public function createComponentTinyForm()
 	{
 		$form = new Nette\Application\UI\Form();
 

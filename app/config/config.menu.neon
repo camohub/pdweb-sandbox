@@ -27,6 +27,9 @@ menu:
 				allow:
 					loggedIn: true
 					roles: [editor, admin]
+			Lang:
+				title: front.topmenu.admin
+				target: :Front:Default:changeLang
 
 	Admin:
 		controlClass: App\AdminModule\Components\Menu\AdminMenuControl
@@ -36,6 +39,10 @@ menu:
 			breadcrumb: %appDir%/AdminModule/components/menu/templates/breadcrumb.latte
 
 		items:
+			Home:
+				title: Homepage
+				target: :Front:Articles:show
+				data: [icon=home]
 			Config:
 				title: Config
 				target: :Admin:Config:default
@@ -46,15 +53,15 @@ menu:
 				data: [icon=pencil]
 
 			Categories:
-				title: Categories
-				target: :Admin:Categories:default
+				title: Categórie
+				target: :Admin:Categories:articlesCategories
 				data: [icon=sitemap]
 				items:
 					CategoriesArticles:
-						title: Articles categories
+						title: Kategórie článkov
 						target: :Admin:Categories:articlesCategories
 						data: [icon=circle-o]
 					CategoriesProducts:
-						title: Products categories
+						title: Kategórie produktov
 						target: :Admin:Categories:productsCategories
 						data: [icon=circle-o]

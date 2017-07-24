@@ -5,6 +5,8 @@ namespace App\FrontModule\Forms;
 
 use App;
 use App\Model\Services\CommentsArticlesService;
+use Kdyby\Doctrine\EntityManager;
+use Kdyby\Doctrine\EntityRepository;
 use Kdyby\Translation\Translator;
 use Nette;
 use App\Model\Repositories\ArticlesRepository;
@@ -15,11 +17,14 @@ use Tracy\Debugger;
 class CommentFormFactory
 {
 
+	/** @var  EntityManager */
+	protected $em;
+
 	/** @var  CommentsArticlesService */
 	protected $commentsArticlesService;
 
-	/** @var  ArticlesRepository */
-	protected $articlesRepository;
+	/** @var  EntityRepository */
+	protected $articleRepository;
 
 	/** @var  Translator */
 	protected $translator;
@@ -31,10 +36,10 @@ class CommentFormFactory
 	protected $user;
 
 
-	public function __construct( CommentsArticlesService $cAS, ArticlesRepository $aR, Translator $tr, Nette\Security\User $u )
+	public function __construct( EntityManager $em, CommentsArticlesService $cAS, Translator $tr, Nette\Security\User $u )
 	{
 		$this->commentsArticlesService = $cAS;
-		$this->articlesRepository = $aR;
+		$this->articleRepository = $em->getRepository( App\Model\Entity\Article::class );
 		$this->user = $u;
 		$this->translator = $tr;
 		$this->pTranslator = $this->translator->domain( 'front.forms.comment-form' );
@@ -83,11 +88,11 @@ class CommentFormFactory
 		}
 
 		$title = $presenter->getParameter( 'title' );
-		$article = $this->articlesRepository->findOneBy( [ 'slug =' => $title ] );
+		$article = $this->articleRepository->findOneBy( [ 'langs.slug =' => $title ] );
 
 		try
 		{
-			$this->commentsArticlesService->insertComment( $article->id, $values );
+			$this->commentsArticlesService->insertComment( $article, $values );
 			$presenter->flashMessage( 'front.forms.comment-form.success', 'success' );
 		}
 		catch ( \Exception $e )
